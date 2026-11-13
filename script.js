@@ -1146,7 +1146,9 @@ async function visitorPoem() {
     cat: async (arg) => {
       if (!arg) return print([{ t: "cat: ¿qué archivo? prueba «ls -a».", cls: "err" }]);
       try {
-        const r = await fetch(arg.trim().replace(/^\/+/, ""), { cache: "no-store" });
+        let path = arg.trim().replace(/^\/+/, "").replace(/\/$/, "");
+        if (path === ".gato") path = ".gato/gato.txt"; // .gato es una carpeta con su versión en texto
+        const r = await fetch(path, { cache: "no-store" });
         if (!r.ok) throw 0;
         const txt = await r.text();
         return print(txt.replace(/\s+$/, "").split("\n").map(t => ({ t, cls: "file" })), 6);
