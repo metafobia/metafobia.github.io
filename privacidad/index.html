@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Aviso de privacidad · Metafobia</title>
+<meta name="description" content="Qué datos usa Metafobia, dónde se guardan y cómo borrarlos.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="32x32">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:#000}
+  body{background:#000;color:#d6d6d6;font:17px/1.75 Georgia,"Times New Roman",serif;padding:clamp(1.5rem,6vw,4rem) 1rem 5rem}
+  main{max-width:40rem;margin:0 auto}
+  a{color:#8fd8ff}
+  a:hover,a:focus-visible{color:#fff}
+  .back{display:inline-block;margin-bottom:2.5rem;font:.82rem "Courier New",monospace;letter-spacing:.06em;color:#9a9a9a;text-decoration:none;border:1px solid #2a2a2a;border-radius:4px;padding:.45rem .8rem}
+  .back:hover,.back:focus-visible{color:#fff;border-color:#555;outline:none}
+  h1{font-weight:400;font-size:clamp(1.9rem,6vw,2.6rem);letter-spacing:.04em;color:#fff;text-shadow:0 0 10px rgba(255,255,255,.45)}
+  .sub{margin-top:.4rem;font-style:italic;color:#8a8a8a}
+  .short{margin:2.2rem 0;padding:1.1rem 1.3rem;border:1px solid #2a2a2a;border-left:3px solid #7dffa8;background:#060606;font:.92rem/1.7 "Courier New",monospace;color:#cfcfcf}
+  .short b{color:#7dffa8;font-weight:400}
+  h2{margin:2.4rem 0 .6rem;font-weight:400;font-size:1.25rem;color:#fff;letter-spacing:.03em}
+  p+p,ul+p,p+ul{margin-top:.8rem}
+  ul{padding-left:1.2rem}
+  li{margin:.35rem 0}
+  code{font:.88em "Courier New",monospace;color:#ffb3d9;background:#111;border-radius:3px;padding:.05em .35em}
+  button{margin-top:1rem;background:none;border:1px solid #ff8cc6;color:#ff8cc6;border-radius:4px;padding:.55rem .9rem;font:.85rem "Courier New",monospace;cursor:pointer}
+  button:hover,button:focus-visible{background:#ff8cc6;color:#000;outline:none}
+  #ok{margin-left:.8rem;font:.85rem "Courier New",monospace;color:#7dffa8}
+  footer{margin-top:3rem;font-size:.85rem;color:#6a6a6a}
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="/">← volver a Metafobia</a>
+  <h1>Aviso de privacidad</h1>
+  <p class="sub">Lo que esta página sabe de ti, y lo que no.</p>
+
+  <div class="short">
+    <b>en corto:</b> Metafobia no usa cookies, no tiene publicidad ni estadísticas,
+    y no guarda ni envía tus datos a ningún servidor propio.
+    Lo poco que recuerda se queda <b>en tu navegador</b>, y puedes borrarlo cuando quieras.
+  </div>
+
+  <h2>1. El poema del visitante (<code>whoami</code>)</h2>
+  <p>Cuando escribes <code>whoami</code> en la consola, la página compone un poema con datos que tu propio
+  navegador le da en ese momento: tamaño de pantalla, tipo de dispositivo y navegador, hora y zona horaria,
+  si usas pantalla táctil, si prefieres el modo oscuro, el nivel de batería (solo en algunos navegadores)
+  y cuánto tiempo llevas en la página.</p>
+  <p>Todo se calcula <b>dentro de tu navegador</b> y solo se muestra a ti. No se guarda ni se envía a ningún lugar.
+  Al cerrar la página, desaparece.</p>
+
+  <h2>2. La memoria de tus visitas</h2>
+  <p>Cuando abres una obra, la página anota en tu navegador qué obra fue y cuántas veces la abriste
+  (en el almacenamiento local, con el nombre <code>metafobia:visitas</code>). Así los títulos se "gastan"
+  y el comando <code>historial</code> puede mostrarte tu recorrido.</p>
+  <p>Esa información <b>no sale de tu dispositivo</b>: nadie más la ve, ni siquiera quien hizo esta página.</p>
+
+  <h2>3. "Lo más reciente"</h2>
+  <p>Para saber qué obra destacar, tu navegador consulta una vez por visita la lista pública de repositorios de
+  quien hizo Metafobia en GitHub (<code>api.github.com</code>). Como en cualquier visita a un sitio web, GitHub recibe tu
+  dirección IP al responder. La respuesta se guarda solo durante la sesión (<code>metafobia:repos2</code>).</p>
+
+  <h2>4. Dónde vive esta página</h2>
+  <p>Metafobia está alojada en <b>GitHub Pages</b>. Como cualquier servidor web, GitHub puede registrar datos
+  técnicos de las visitas (por ejemplo, la dirección IP) por seguridad y funcionamiento.
+  Puedes leer su política en la
+  <a href="https://docs.github.com/es/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">declaración de privacidad de GitHub</a>.</p>
+
+  <h2>5. Las obras enlazadas</h2>
+  <p>Algunas obras viven en otros sitios (por ejemplo FlipHTML5 o TikTok) o en otras páginas de GitHub.
+  Al abrirlas sales de Metafobia y se aplican las políticas de privacidad de esos sitios.</p>
+
+  <h2>6. Cómo borrar lo que la página recuerda</h2>
+  <ul>
+    <li>Con este botón:</li>
+  </ul>
+  <button type="button" id="forget">olvidar mis visitas</button><span id="ok" role="status"></span>
+  <ul style="margin-top:1rem">
+    <li>O escribe <code>olvidar</code> en la consola de la página.</li>
+    <li>O borra los datos del sitio desde la configuración de tu navegador.</li>
+  </ul>
+
+  <h2>7. Dudas</h2>
+  <p>Si tienes preguntas sobre este aviso, puedes escribir a través del perfil de Metafobia en GitHub:
+  <a href="https://github.com/metafobia" rel="noopener">github.com/metafobia</a>.</p>
+
+  <footer>Última actualización: noviembre de 2026.</footer>
+</main>
+<script>
+  document.getElementById("forget").addEventListener("click", () => {
+    try { localStorage.removeItem("metafobia:visitas"); sessionStorage.removeItem("metafobia:repos2"); } catch (e) {}
+    document.getElementById("ok").textContent = "listo. la página ya no recuerda tus visitas.";
+  });
+</script>
+</body>
+</html>

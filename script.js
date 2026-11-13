@@ -1105,6 +1105,8 @@ async function visitorPoem() {
       "  abrir <obra>    abre una obra (ej: abrir horizonte)",
       "  azar            abre una obra al azar",
       "  whoami          un poema sobre quien mira",
+      "  privacidad      qué sabe esta página de ti",
+      "  olvidar         borra la memoria de tus visitas",
       "  poema           vuelve a leer el poema oculto",
       "  historial       las obras que ya abriste",
       "  cat <archivo>   lee un archivo",
@@ -1136,9 +1138,23 @@ async function visitorPoem() {
     azar: async () => COMMANDS.abrir(allWorks()[(Math.random() * allWorks().length) | 0].name),
     whoami: async () => {
       const l = await visitorPoem();
-      return print([{ t: "" }, ...l.map(t => ({ t, cls: "poem" })), { t: "" }]);
+      return print([{ t: "" }, ...l.map(t => ({ t, cls: "poem" })), { t: "" },
+        { t: "/* nada de esto sale de tu navegador. escribe «privacidad» para saber más. */", cls: "dim" }]);
     },
     poema: async () => print([{ t: "" }, ...POEM.map(t => ({ t, cls: "poem" })), { t: "" }]),
+    privacidad: async () => {
+      await print([{ t: "esta página no usa cookies ni estadísticas.", cls: "hit" },
+        "lo que recuerda (tus visitas) se queda en tu navegador.",
+        "whoami se calcula aquí mismo y no se envía a ningún lado.",
+        { t: "abriendo el aviso completo...", cls: "dim" }]);
+      setTimeout(() => { window.location.href = "/privacidad/"; }, 900);
+    },
+    olvidar: async () => {
+      try { localStorage.removeItem(MEM_KEY); sessionStorage.removeItem("metafobia:repos2"); } catch (e) {}
+      document.querySelectorAll(".worn").forEach(li => li.classList.remove("worn"));
+      await print([{ t: "memoria borrada. la página ya no recuerda tus visitas.", cls: "hit" }, { t: "(a veces olvidar también es un poema)", cls: "dim" }]);
+      if (!location.hash) renderMain(); else route();
+    },
     historial: async () => {
       const m = loadMem(), works = allWorks();
       const rows = Object.entries(m).map(([u, n]) => { const w = works.find(x => x.url === u); return w ? `  ${String(n).padStart(2)}×  ${w.name}` : null; }).filter(Boolean);
@@ -1283,6 +1299,11 @@ async function visitorPoem() {
   const cbtn = document.querySelector(".console-btn");
   if (cbtn) dock.appendChild(cbtn);
   dock.appendChild(btn);
+  const priv = document.createElement("a");
+  priv.className = "priv-link";
+  priv.href = "/privacidad/";
+  priv.textContent = "privacidad";
+  dock.appendChild(priv);
   document.body.appendChild(dock);
   btn.addEventListener("click", () => {
     if (btn.classList.contains("leaving")) return;
