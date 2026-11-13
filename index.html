@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Metafobia</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="layout">
+  <section class="col col--left">
+    <header class="head">
+      <h1 class="title">Metafobia</h1>
+      <p class="subtitle">Poesía, código, IA y otros delirios.</p>
+    </header>
+
+    <nav class="list-wrap" aria-label="Proyectos" id="listWrap">
+      <ul class="list" id="projectList"></ul>
+
+      <canvas class="dust" id="dust" aria-hidden="true"></canvas>
+      <svg class="cat" id="cat" width="1" height="1" aria-hidden="true" focusable="false">
+        <g id="catPos">
+          <g id="catBody">
+            <path id="tail" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+            <g id="legs" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+              <line/><line opacity=".75"/><line opacity=".75"/><line/>
+            </g>
+            <ellipse cx="0" cy="-10" rx="11" ry="5.5" fill="#fff"/>
+            <g id="catHead">
+              <path d="M7.4 -16.5 L8.6 -24 L11.6 -19.6 Z M12.6 -19.6 L15.8 -24 L16.8 -16.5 Z" fill="#fff"/>
+              <circle cx="12" cy="-15" r="5.2" fill="#fff"/>
+              <ellipse id="catEye" cx="14.4" cy="-15.8" rx="0.9" ry="1.5" fill="#000"/>
+            </g>
+          </g>
+          <!-- postura dormida: enroscado, cabeza hacia el gatito dormido -->
+          <g id="catCurl" opacity="0">
+            <path id="curlTail" d="M-12 -3 Q-19 2 -5 1.4" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+            <g id="curlBody">
+              <ellipse cx="0" cy="-6.5" rx="13" ry="6.5" fill="#fff"/>
+              <path d="M15.2 -8 L15.6 -15.8 L11.4 -11.6 Z M10 -11.8 L6.6 -15.6 L5.6 -9 Z" fill="#fff"/>
+              <circle cx="11" cy="-6.6" r="5.4" fill="#fff"/>
+              <path d="M14.6 -6.6 Q13 -5 11.4 -6.6" fill="none" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+              <path d="M15 -1.2 L9 -1.2" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+            </g>
+          </g>
+        </g>
+      </svg>
+    </nav>
+  </section>
+
+  <section class="col col--right" aria-hidden="true">
+    <img class="art" src="imagen.png" alt="">
+  </section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>
