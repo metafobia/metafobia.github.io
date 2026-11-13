@@ -1108,6 +1108,7 @@ async function visitorPoem() {
       "  poema           vuelve a leer el poema oculto",
       "  historial       las obras que ya abriste",
       "  cat <archivo>   lee un archivo",
+      "  ascii           tu ilustración hecha de letras",
       "  fecha · gato · matrix · limpiar · salir",
       { t: "  (hay más comandos. no todos están en esta lista.)", cls: "dim" }
     ]),
@@ -1163,6 +1164,12 @@ async function visitorPoem() {
       startFx();
     },
     limpiar: async () => { out.replaceChildren(); },
+    ascii: async () => {
+      if (!window.toggleAscii) return print([{ t: "ascii: no disponible aquí", cls: "err" }]);
+      const on = window.toggleAscii();
+      await print([on ? { t: "convirtiendo píxeles en letras... ok", cls: "hit" } : "volviendo a la imagen..."]);
+      if (on) setTimeout(close, 700);
+    },
     salir: async () => close(),
     echo: async (arg) => print([arg || ""]),
     sudo: async (arg) => {
@@ -1389,6 +1396,133 @@ async function visitorPoem() {
     setTimeout(sweep, 12000 + Math.random() * 14000);
   }
   setTimeout(sweep, 5000);
+})();
+
+// ---------- Modo ASCII: la ilustración hecha de letras ----------
+// Se activa con el comando «ascii» en la consola. Las letras cerca del cursor se agitan.
+(() => {
+  const col = document.querySelector(".col--right"), img = col && col.querySelector(".art");
+  if (!img) return;
+  const cv = document.createElement("canvas");
+  cv.className = "ascii";
+  cv.setAttribute("aria-hidden", "true");
+  col.appendChild(cv);
+  const label = document.createElement("button");
+  label.type = "button";
+  label.className = "ascii-exit";
+  label.textContent = "[ascii] · volver a la imagen";
+  col.appendChild(label);
+  const c = cv.getContext("2d");
+  const RAMP = " .,:;-~=+*ixo#%&@"; // de claro a oscuro (sobre fondo negro: de oscuro a brillante)
+  const GLY = "01<>/\\|#%&$@{}[]";
+  let on = false, grid = null, cols = 0, rows = 0, W = 0, H = 0, d = 1, cw = 0, ch = 0, raf = 0, mx = -999, my = -999;
+  function build() {
+    const r = col.getBoundingClientRect();
+    W = r.width; H = r.height; d = Math.min(2, devicePixelRatio || 1);
+    cv.width = Math.round(W * d); cv.height = Math.round(H * d);
+    cv.style.width = W + "px"; cv.style.height = H + "px";
+    cw = innerWidth < 760 ? 7 : 9; ch = cw * 1.6;
+    cols = Math.ceil(W / cw); rows = Math.ceil(H / ch);
+    const t = document.createElement("canvas"); t.width = cols; t.height = rows;
+    const tc = t.getContext("2d", { willReadFrequently: true });
+    const k = Math.max(cols / img.naturalWidth, (rows * 1.6) / img.naturalHeight);
+    const dw = img.naturalWidth * k, dh = img.naturalHeight * k / 1.6;
+    tc.drawImage(img, (cols - dw) / 2, (rows - dh) / 2, dw, dh);
+    let data;
+    try { data = tc.getImageData(0, 0, cols, rows).data; } catch (e) { return false; }
+    grid = new Float32Array(cols * rows);
+    for (let i = 0; i < cols * rows; i++) grid[i] = (data[i * 4] * 0.3 + data[i * 4 + 1] * 0.59 + data[i * 4 + 2] * 0.11) / 255;
+    return true;
+  }
+  function frame(t) {
+    c.setTransform(d, 0, 0, d, 0, 0);
+    c.fillStyle = "#000"; c.fillRect(0, 0, W, H);
+    c.font = `${ch * 0.95}px "Courier New", Courier, monospace`;
+    c.textBaseline = "top";
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const v = grid[y * cols + x];
+      // la ilustración es clara sobre papel: se invierte para que el lápiz brille
+      const ink = 1 - v;
+      let chr = RAMP[Math.min(RAMP.length - 1, Math.floor(ink * RAMP.length))];
+      let a = 0.25 + ink * 0.75, col2 = "230,230,230";
+      const dd = Math.hypot(x * cw - mx, y * ch - my);
+      if (dd < 70) {
+        if (Math.random() < 0.35) chr = GLY[(Math.random() * GLY.length) | 0];
+        a = 1; col2 = dd < 35 ? "80,220,255" : "255,140,198";
+      }
+      if (chr === " ") continue;
+      c.fillStyle = `rgba(${col2},${a.toFixed(2)})`;
+      c.fillText(chr, x * cw, y * ch);
+    }
+    if (on) raf = requestAnimationFrame(frame);
+  }
+  function set(v) {
+    if (v && (!img.complete || !build())) return false;
+    on = v;
+    col.classList.toggle("is-ascii", on);
+    cancelAnimationFrame(raf);
+    if (on) raf = requestAnimationFrame(frame);
+    return on;
+  }
+  window.toggleAscii = () => set(!on);
+  label.addEventListener("click", () => set(false));
+  col.addEventListener("pointermove", e => { const r = col.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; });
+  col.addEventListener("pointerleave", () => { mx = my = -999; });
+  addEventListener("resize", () => { if (on) build(); });
+})();
+
+// ---------- Salvapantallas: lluvia de palabras ----------
+// Si nadie toca la página durante un minuto, caen palabras de los poemas y títulos.
+(() => {
+  if (reduceMotion.matches) return;
+  const IDLE = 60000;
+  const cv = document.createElement("canvas");
+  cv.className = "saver";
+  cv.setAttribute("aria-hidden", "true");
+  document.body.appendChild(cv);
+  const c = cv.getContext("2d");
+  const words = [...new Set([...POEM.join(" ").split(/\s+/), ...allWorks().flatMap(w => w.name.split(/\s+/))]
+    .map(w => w.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase()).filter(w => w.length > 2))];
+  let on = false, drops = [], W = 0, H = 0, d = 1, raf = 0, last = 0, timer = null;
+  const FS = 15;
+  function start() {
+    if (on || document.hidden || !document.querySelector(".term")?.hidden) { arm(); return; }
+    on = true; d = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    cv.width = W * d; cv.height = H * d; cv.style.width = W + "px"; cv.style.height = H + "px";
+    const n = Math.ceil(W / (FS * 1.6));
+    drops = Array.from({ length: n }, (_, i) => ({ x: i * FS * 1.6 + 4, y: -H * 0.3 + Math.random() * H * 0.8, v: 60 + Math.random() * 90,
+      w: words[(Math.random() * words.length) | 0], k: 0 }));
+    c.setTransform(d, 0, 0, d, 0, 0); c.fillStyle = "#000"; c.fillRect(0, 0, W, H);
+    cv.classList.add("on");
+    last = performance.now(); raf = requestAnimationFrame(frame);
+  }
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    c.fillStyle = "rgba(0,0,0,.08)"; c.fillRect(0, 0, W, H);
+    c.font = `${FS}px "Courier New", Courier, monospace`; c.textBaseline = "top";
+    drops.forEach(p => {
+      p.y += p.v * dt;
+      const i = Math.floor(p.y / FS);
+      if (i > p.k) { // escribe la siguiente letra de la palabra, en vertical
+        p.k = i;
+        const ch = p.w[i % (p.w.length + 2)] || " ";
+        c.fillStyle = Math.random() < 0.06 ? "rgba(255,140,198,.95)" : Math.random() < 0.12 ? "rgba(80,220,255,.95)" : "rgba(235,235,235,.9)";
+        c.fillText(ch, p.x, i * FS);
+      }
+      if (p.y > H + 40) { p.y = -Math.random() * 200; p.k = Math.floor(p.y / FS); p.v = 60 + Math.random() * 90; p.w = words[(Math.random() * words.length) | 0]; }
+    });
+    if (on) raf = requestAnimationFrame(frame);
+  }
+  function stop() {
+    if (!on) return;
+    on = false; cv.classList.remove("on");
+    setTimeout(() => { if (!on) cancelAnimationFrame(raf); }, 900);
+  }
+  function arm() { clearTimeout(timer); timer = setTimeout(start, IDLE); }
+  ["pointermove", "pointerdown", "keydown", "wheel", "touchstart", "scroll"].forEach(ev =>
+    addEventListener(ev, () => { stop(); arm(); }, { passive: true }));
+  arm();
+  window.startSaver = start; // para probar: startSaver() en la consola real
 })();
 
 route();
