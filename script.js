@@ -1191,6 +1191,19 @@ async function visitorPoem() {
     const sp = document.createElement("span"); sp.className = "cmd"; sp.textContent = `visitante@metafobia:~$ ${line}\n`; out.appendChild(sp);
     if (!line) return;
     history.push(line); hpos = history.length;
+    // frases completas (se comparan sin tildes, mayúsculas ni signos)
+    const phrase = norm(line).replace(/[¡!¿?.,…]/g, "").replace(/\s+/g, " ").trim();
+    const PHRASES = {
+      "te extrano": "yo también te extraño.",
+      "te quiero": "yo también te quiero."
+    };
+    if (PHRASES[phrase]) {
+      busy = true; input.disabled = true;
+      await print([{ t: PHRASES[phrase], cls: "poem" }], 40);
+      busy = false; input.disabled = false;
+      if (matchMedia("(pointer: fine)").matches) input.focus();
+      return;
+    }
     const [c, ...rest] = line.split(/\s+/);
     const fn = COMMANDS[norm(c)];
     busy = true; input.disabled = true;
