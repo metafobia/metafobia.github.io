@@ -994,10 +994,49 @@ try {
   console.log("%c" + POEM.join("\n"), "font:14px/1.6 Georgia,serif;color:#cfcfcf");
   console.log("%c/* si llegaste hasta aquí, ya eres parte de la obra */", "font:12px monospace;color:#666");
   console.log("%c/* pista: escribe g-a-t-o en cualquier parte de la página */", "font:12px monospace;color:#666");
+  console.log("%c/* hay archivos escondidos: prueba abrir /robots.txt */", "font:12px monospace;color:#666");
 } catch (e) {}
 
-// Botón visible para quien no conoce la consola del navegador:
-// abre una "consola" dentro de la página que escribe el poema.
+// ---------- Poema del visitante ----------
+// Se compone con lo que el navegador sabe de quien mira. Nada sale de esta página.
+const pageStart = performance.now();
+async function visitorPoem() {
+  const ua = navigator.userAgent;
+  const browser = /Edg\//.test(ua) ? "Edge" : /OPR\//.test(ua) ? "Opera" : /Firefox\//.test(ua) ? "Firefox"
+    : /SamsungBrowser/.test(ua) ? "Samsung Internet" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : "un navegador sin nombre";
+  const os = /iPad|Macintosh.*Mobile/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ? "un iPad"
+    : /iPhone/.test(ua) ? "un iPhone" : /Android/.test(ua) ? (/Mobile/.test(ua) ? "un teléfono Android" : "una tableta Android")
+    : /Windows/.test(ua) ? "Windows" : /Mac OS X/.test(ua) ? "un Mac" : /Linux/.test(ua) ? "Linux" : "un sistema que no dice su nombre";
+  const d = new Date();
+  const days = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const hh = d.getHours(), mm = String(d.getMinutes()).padStart(2, "0");
+  const momento = hh < 6 ? "de la madrugada" : hh < 12 ? "de la mañana" : hh < 19 ? "de la tarde" : "de la noche";
+  const mins = Math.max(1, Math.round((performance.now() - pageStart) / 60000));
+  const lines = [
+    `eres una pantalla de ${innerWidth} × ${innerHeight}`,
+    `mirando desde ${os}, a través de ${browser},`,
+    `a las ${hh}:${mm} ${momento} de un ${days[d.getDay()]}.`
+  ];
+  try {
+    if (navigator.getBattery) {
+      const b = await navigator.getBattery();
+      const pct = Math.round(b.level * 100);
+      lines.push(b.charging ? `te estás cargando (${pct} %), como quien respira hondo.` : `te queda ${pct} % de batería`);
+    }
+  } catch (e) {}
+  const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || "").split("/").pop().replace(/_/g, " ");
+  if (tz) lines.push(`tu reloj dice que estás cerca de ${tz}.`);
+  if (navigator.maxTouchPoints > 0) lines.push("me tocas con los dedos, no con un ratón.");
+  if (matchMedia("(prefers-color-scheme: dark)").matches) lines.push("prefieres la oscuridad. aquí también.");
+  const seen = Object.keys(loadMem()).length;
+  lines.push(seen ? `ya abriste ${seen} ${seen === 1 ? "obra" : "obras"}: las recuerdo por ti.` : "todavía no has abierto ninguna obra.");
+  lines.push(`llevas ${mins} ${mins === 1 ? "minuto" : "minutos"} aquí`);
+  lines.push("y aun así viniste.");
+  return lines;
+}
+
+// ---------- Terminal: la consola de la página acepta comandos ----------
+// Botón visible para quien no conoce la consola del navegador.
 (() => {
   const btn = document.createElement("button");
   btn.className = "console-btn";
@@ -1010,55 +1049,184 @@ try {
   box.className = "term";
   box.setAttribute("role", "dialog");
   box.setAttribute("aria-modal", "true");
-  box.setAttribute("aria-label", "Consola: poema escondido");
+  box.setAttribute("aria-label", "Consola de Metafobia");
   box.hidden = true;
   box.innerHTML = `
     <div class="term-bar"><span>consola — metafobia</span><button type="button" class="term-x" aria-label="Cerrar">×</button></div>
     <pre class="term-out" aria-live="polite"></pre>
-    <div class="term-secret">
-      <span class="dim">/* secreto: escribe <b>g-a-t-o</b> en cualquier parte de la página, toca tres veces el título… o pulsa aquí */</span>
-      <button type="button" class="term-run">▶ invocar_gato()</button>
+    <form class="term-line" autocomplete="off">
+      <label for="term-in" class="term-prompt">visitante@metafobia:~$</label>
+      <input id="term-in" class="term-in" type="text" spellcheck="false" autocapitalize="off" autocorrect="off" enterkeyhint="go" aria-label="Escribe un comando">
+    </form>
+    <div class="term-chips" aria-label="Comandos rápidos">
+      <span class="dim">prueba:</span>
+      <button type="button" data-cmd="ayuda">ayuda</button>
+      <button type="button" data-cmd="ls">ls</button>
+      <button type="button" data-cmd="whoami">whoami</button>
+      <button type="button" data-cmd="gato">gato</button>
+      <button type="button" data-cmd="sudo amor">sudo amor</button>
+      <button type="button" data-cmd="ls -a">ls -a</button>
     </div>
-    <p class="term-help">Este poema también está escondido en la consola real del navegador.
-    Para verla: en ordenador pulsa <kbd>F12</kbd> (o <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>J</kbd>;
-    en Mac <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>J</kbd>) y abre la pestaña «Consola».
-    En tabletas y móviles la consola real no está disponible: por eso existe esta ventana.</p>`;
+    <p class="term-help">Escribe un comando y pulsa <kbd>Enter</kbd>, o toca uno de los de arriba.
+    Este poema también está escondido en la consola real del navegador: en ordenador pulsa <kbd>F12</kbd>
+    (en Mac <kbd>⌘</kbd>+<kbd>⌥</kbd>+<kbd>J</kbd>) y abre la pestaña «Consola».</p>`;
   document.body.appendChild(box);
-  const out = box.querySelector(".term-out");
-  let timer = null;
+  const out = box.querySelector(".term-out"), input = box.querySelector(".term-in"), form = box.querySelector(".term-line");
+  let timer = null, busy = false, booted = false;
+  const history = []; let hpos = 0;
 
-  function type() {
-    const lines = [
-      { t: "> metafobia.leer('poema_oculto.txt')", cls: "cmd" },
-      { t: "  cargando metáforas... ok", cls: "dim" },
-      { t: "" },
-      ...POEM.map(t => ({ t, cls: "poem" })),
-      { t: "" },
-      { t: "/* si llegaste hasta aquí, ya eres parte de la obra */", cls: "dim" },
-      { t: "> _", cls: "cmd blink" }
-    ];
-    out.replaceChildren();
-    if (reduceMotion.matches) {
-      lines.forEach(l => { const s = document.createElement("span"); s.className = l.cls || ""; s.textContent = l.t + "\n"; out.appendChild(s); });
-      return;
-    }
-    let li = 0, ci = 0, span = null;
-    (function step() {
-      if (li >= lines.length) return;
-      const L = lines[li];
-      if (!span) { span = document.createElement("span"); span.className = L.cls || ""; out.appendChild(span); }
-      if (ci < L.t.length) { span.textContent += L.t[ci++]; timer = setTimeout(step, L.cls === "poem" ? 38 : 18); }
-      else { span.textContent += "\n"; li++; ci = 0; span = null; timer = setTimeout(step, L.t ? 260 : 140); }
-    })();
+  // escribe líneas con efecto de tecleo; devuelve una promesa
+  function print(lines, speed = 14) {
+    return new Promise(res => {
+      const L = lines.map(l => typeof l === "string" ? { t: l } : l);
+      if (reduceMotion.matches || speed === 0) {
+        L.forEach(l => { const s = document.createElement("span"); s.className = l.cls || ""; s.textContent = l.t + "\n"; out.appendChild(s); });
+        out.scrollTop = out.scrollHeight; res(); return;
+      }
+      let li = 0, ci = 0, span = null;
+      (function step() {
+        if (li >= L.length) { res(); return; }
+        const l = L[li];
+        if (!span) { span = document.createElement("span"); span.className = l.cls || ""; out.appendChild(span); }
+        if (ci < l.t.length) { span.textContent += l.t.slice(ci, ci + 2); ci += 2; timer = setTimeout(step, l.cls === "poem" ? speed * 2.4 : speed); }
+        else { span.textContent += "\n"; li++; ci = 0; span = null; timer = setTimeout(step, l.t ? 90 : 40); }
+        out.scrollTop = out.scrollHeight;
+      })();
+    });
   }
-  function open() { box.hidden = false; btn.setAttribute("aria-expanded", "true"); type(); box.querySelector(".term-x").focus(); }
-  function close() { clearTimeout(timer); box.hidden = true; btn.setAttribute("aria-expanded", "false"); btn.focus(); }
+  const norm = t => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  const HIDDEN = ["robots.txt", "secreto.txt", ".gato"];
+
+  const COMMANDS = {
+    ayuda: async () => print([
+      { t: "comandos disponibles:", cls: "cmd" },
+      "  ls              lista las secciones",
+      "  ls <sección>    lista las obras de una sección (ej: ls 2)",
+      "  abrir <obra>    abre una obra (ej: abrir horizonte)",
+      "  azar            abre una obra al azar",
+      "  whoami          un poema sobre quien mira",
+      "  poema           vuelve a leer el poema oculto",
+      "  historial       las obras que ya abriste",
+      "  cat <archivo>   lee un archivo",
+      "  fecha · gato · matrix · limpiar · salir",
+      { t: "  (hay más comandos. no todos están en esta lista.)", cls: "dim" }
+    ]),
+    ls: async (arg) => {
+      if (arg === "-a" || arg === "-la" || arg === "-al") {
+        return print([...sections.map((s, i) => `drwxr-xr-x  ${ROMAN[i].padEnd(4)}${slug(s.name)}/`),
+          ...HIDDEN.map(f => ({ t: `-rw-r--r--      ${f}`, cls: "hit" }))]);
+      }
+      if (!arg) return print([...sections.map((s, i) => `${ROMAN[i].padEnd(4)}${slug(s.name)}/   (${s.children.length})`),
+        { t: "escribe «ls 1» para ver las obras de una sección.", cls: "dim" }]);
+      const n = parseInt(arg, 10);
+      const sec = !isNaN(n) ? sections[n - 1] : sections.find(s => norm(s.name).includes(norm(arg)) || slug(s.name).startsWith(norm(arg)));
+      if (!sec) return print([{ t: `ls: no existe «${arg}»`, cls: "err" }]);
+      return print([{ t: sec.name, cls: "cmd" }, ...sec.children.map((w, i) => `  ${String(i + 1).padStart(2, "0")}  ${w.name}`),
+        { t: "escribe «abrir» y el nombre (o parte) para abrir una obra.", cls: "dim" }]);
+    },
+    abrir: async (arg) => {
+      if (!arg) return print([{ t: "abrir: ¿qué obra? ej: abrir horizonte", cls: "err" }]);
+      const w = allWorks().find(x => norm(x.name).includes(norm(arg)));
+      if (!w) return print([{ t: `abrir: no encontré «${arg}». prueba «ls 1».`, cls: "err" }]);
+      await print([`abriendo «${w.name}»...`, { t: "  ████████████████ 100%", cls: "hit" }]);
+      remember(w.url);
+      setTimeout(() => { window.location.href = w.url; }, 500);
+    },
+    azar: async () => COMMANDS.abrir(allWorks()[(Math.random() * allWorks().length) | 0].name),
+    whoami: async () => {
+      const l = await visitorPoem();
+      return print([{ t: "" }, ...l.map(t => ({ t, cls: "poem" })), { t: "" }]);
+    },
+    poema: async () => print([{ t: "" }, ...POEM.map(t => ({ t, cls: "poem" })), { t: "" }]),
+    historial: async () => {
+      const m = loadMem(), works = allWorks();
+      const rows = Object.entries(m).map(([u, n]) => { const w = works.find(x => x.url === u); return w ? `  ${String(n).padStart(2)}×  ${w.name}` : null; }).filter(Boolean);
+      return print(rows.length ? [{ t: "obras que ya abriste (y cuántas veces):", cls: "cmd" }, ...rows] : [{ t: "historial vacío. todavía no has entrado a ninguna obra.", cls: "dim" }]);
+    },
+    cat: async (arg) => {
+      if (!arg) return print([{ t: "cat: ¿qué archivo? prueba «ls -a».", cls: "err" }]);
+      try {
+        const r = await fetch(arg.trim().replace(/^\/+/, ""), { cache: "no-store" });
+        if (!r.ok) throw 0;
+        const txt = await r.text();
+        return print(txt.replace(/\s+$/, "").split("\n").map(t => ({ t, cls: "file" })), 6);
+      } catch (e) { return print([{ t: `cat: ${arg}: no existe el archivo (o la metáfora)`, cls: "err" }]); }
+    },
+    fecha: async () => print([new Date().toLocaleString("es", { dateStyle: "full", timeStyle: "short" })]),
+    gato: async () => { close(); setTimeout(() => window.summonKitten && window.summonKitten(), 250); },
+    matrix: async () => {
+      await print([{ t: "despertando...", cls: "hit" }]);
+      for (let i = 0; i < 420; i++) fxParts.push({ x: Math.random() * innerWidth, y: -Math.random() * innerHeight, vx: 0, vy: 120 + Math.random() * 160, g: 0,
+        s: Math.random() < 0.7 ? 2 : 3, age: -Math.random() * 1.5, life: 2.4 + Math.random(), c: "80,255,140", a: 0.9 });
+      startFx();
+    },
+    limpiar: async () => { out.replaceChildren(); },
+    salir: async () => close(),
+    echo: async (arg) => print([arg || ""]),
+    sudo: async (arg) => {
+      if (norm(arg) === "amor") return print([`[sudo] contraseña para amor: ********`, { t: "permiso concedido.", cls: "hit" }, { t: "el amor ya estaba instalado. solo faltaba ejecutarlo.", cls: "poem" }], 22);
+      return print([{ t: `${arg || "sudo"}: no está en el archivo sudoers. este incidente será reportado al gato.`, cls: "err" }]);
+    },
+    rm: async (arg) => {
+      if (!/metafora/.test(norm(arg))) return print([{ t: `rm: no se puede borrar «${arg}»: aquí nada se borra del todo`, cls: "err" }]);
+      await print(["borrando metáforas...", "  rm: la-luna-como-espejo ... ok", "  rm: el-gato-como-sueño ... ok", "  rm: la-página-como-cuerpo ..."], 18);
+      document.documentElement.classList.add("broken");
+      setTimeout(async () => {
+        document.documentElement.classList.remove("broken");
+        await print([{ t: "error crítico: las metáforas no se pueden borrar.", cls: "err" }, { t: "solo cambian de lugar.", cls: "poem" }], 22);
+      }, 2200);
+    },
+    hola: async () => print(["hola. el gato también te saluda."]),
+    miau: async () => print(["miau."]),
+    pwd: async () => print(["/metafobia/entre/las/palabras"]),
+    exit: async () => close(), clear: async () => out.replaceChildren(), help: async () => COMMANDS.ayuda(), date: async () => COMMANDS.fecha(),
+    open: async (a) => COMMANDS.abrir(a), history: async () => COMMANDS.historial()
+  };
+  COMMANDS["quien"] = async () => COMMANDS.whoami();
+
+  async function run(raw) {
+    const line = raw.trim();
+    const sp = document.createElement("span"); sp.className = "cmd"; sp.textContent = `visitante@metafobia:~$ ${line}\n`; out.appendChild(sp);
+    if (!line) return;
+    history.push(line); hpos = history.length;
+    const [c, ...rest] = line.split(/\s+/);
+    const fn = COMMANDS[norm(c)];
+    busy = true; input.disabled = true;
+    try {
+      if (fn) await fn(rest.join(" "));
+      else await print([{ t: `comando no encontrado: ${c}. escribe «ayuda».`, cls: "err" }]);
+    } finally {
+      busy = false; input.disabled = false;
+      if (!box.hidden && matchMedia("(pointer: fine)").matches) input.focus();
+      out.scrollTop = out.scrollHeight;
+    }
+  }
+  form.addEventListener("submit", e => { e.preventDefault(); if (busy) return; const v = input.value; input.value = ""; run(v); });
+  input.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp" && history.length) { hpos = Math.max(0, hpos - 1); input.value = history[hpos]; e.preventDefault(); }
+    if (e.key === "ArrowDown" && history.length) { hpos = Math.min(history.length, hpos + 1); input.value = history[hpos] || ""; e.preventDefault(); }
+  });
+  box.querySelectorAll(".term-chips button").forEach(b => b.addEventListener("click", () => { if (!busy) run(b.dataset.cmd); }));
+
+  async function boot() {
+    out.replaceChildren();
+    busy = true; input.disabled = true;
+    await print([{ t: "> metafobia.leer('poema_oculto.txt')", cls: "cmd" }, { t: "  cargando metáforas... ok", cls: "dim" }, { t: "" }]);
+    await print(POEM.map(t => ({ t, cls: "poem" })), 16);
+    await print([{ t: "" }, { t: "/* si llegaste hasta aquí, ya eres parte de la obra */", cls: "dim" },
+      { t: "/* esta consola acepta comandos. escribe «ayuda». */", cls: "hit" }]);
+    busy = false; input.disabled = false;
+    if (matchMedia("(pointer: fine)").matches) input.focus();
+  }
+  function open() {
+    box.hidden = false; btn.setAttribute("aria-expanded", "true");
+    if (!booted) { booted = true; boot(); } else if (matchMedia("(pointer: fine)").matches) input.focus();
+    box.querySelector(".term-x").focus({ preventScroll: true });
+    if (matchMedia("(pointer: fine)").matches) setTimeout(() => input.focus(), 50);
+  }
+  function close() { box.hidden = true; btn.setAttribute("aria-expanded", "false"); btn.focus(); }
   btn.addEventListener("click", open);
   box.querySelector(".term-x").addEventListener("click", close);
-  box.querySelector(".term-run").addEventListener("click", () => {
-    close();
-    setTimeout(() => { if (window.summonKitten) window.summonKitten(); }, 250);
-  });
   box.addEventListener("click", e => { if (e.target === box) close(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !box.hidden) close(); });
 })();

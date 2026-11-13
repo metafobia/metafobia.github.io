@@ -175,3 +175,24 @@ body{background:#000;color:var(--fg);font-family:Georgia,"Times New Roman",serif
 .col--right.glitch .art{animation:jitter .12s steps(2) 7}
 @keyframes jitter{0%{transform:translateX(0)}50%{transform:translateX(-5px) skewX(-1deg)}100%{transform:translateX(3px)}}
 @media (prefers-reduced-motion:reduce){.static,.col--right.glitch .art{animation:none}}
+
+/* ---- Terminal interactiva ---- */
+.term-out{max-height:min(46vh,24rem);overflow-y:auto;min-height:12rem}
+.term-out .err{color:#ff7a9c}
+.term-out .hit{color:#7dffa8}
+.term-out .file{color:#e6e6e6}
+.term-line{display:flex;align-items:center;gap:.5rem;background:#050505;border:1px solid #2a2a2a;border-top:0;padding:.55rem 1.1rem;font:.88rem "Courier New",Courier,monospace}
+.term-prompt{color:#7dffa8;white-space:nowrap}
+.term-in{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;font:inherit;caret-color:#50dcff}
+.term-in:disabled{opacity:.4}
+.term-chips{display:flex;flex-wrap:wrap;align-items:center;gap:.45rem;background:#050505;border:1px solid #2a2a2a;border-top:1px dashed #222;padding:.6rem 1.1rem;font:.78rem "Courier New",Courier,monospace;color:#777}
+.term-chips button{background:none;border:1px solid #333;color:#cfcfcf;border-radius:3px;padding:.3rem .6rem;font:inherit;cursor:pointer;transition:border-color .25s,color .25s,box-shadow .25s}
+.term-chips button:hover,.term-chips button:focus-visible{border-color:#ff8cc6;color:#ff8cc6;box-shadow:0 0 10px rgba(255,140,198,.3);outline:none}
+@media (max-width:760px){.term-prompt{font-size:.72rem}.term-line{padding:.55rem .8rem}}
+
+/* ---- rm -rf metáforas: la página se rompe un momento ---- */
+.broken body{animation:broken .18s steps(2) infinite}
+.broken .title,.broken .link{filter:blur(1px);letter-spacing:.4em}
+.broken .col--right{filter:invert(1) hue-rotate(160deg)}
+@keyframes broken{0%{transform:translate(0,0) skewX(0)}50%{transform:translate(-6px,3px) skewX(-3deg)}100%{transform:translate(4px,-2px) skewX(2deg)}}
+@media (prefers-reduced-motion:reduce){.broken body{animation:none}}

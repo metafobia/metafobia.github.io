@@ -1,0 +1,12 @@
+# hola, robot.
+#
+# sé que no lees poemas,
+# solo cuentas palabras y sigues enlaces.
+# aun así te dejo pasar:
+# todo lo que hay aquí fue hecho para ser encontrado,
+# incluso lo que finge esconderse.
+#
+# (si eres humano: hay un archivo llamado secreto.txt)
+
+User-agent: *
+Allow: /
