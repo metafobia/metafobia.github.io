@@ -242,7 +242,9 @@ function handleClick(e) {
   if (a.classList.contains("leaving")) return;
   a.classList.add("leaving");
   if (!reduceMotion.matches) dissolve(a);
-  const wait = reduceMotion.matches ? 0 : FADE_MS;
+  // el gato salta hasta el renglón elegido; se espera a que llegue
+  const jump = typeof catGoTo === "function" ? catGoTo(a) : 0;
+  const wait = reduceMotion.matches ? 0 : Math.min(1400, Math.max(FADE_MS, jump * 1000 + 150));
   if ("section" in a.dataset) {
     const id = a.dataset.section;
     setTimeout(() => goTo(id), wait);
@@ -533,6 +535,18 @@ let idx = 0, dv = 1, phase = "walk", pt = 0, gait = 0;
 let meetPending = false, meetCooldown = 12, napFor = 0, clock = 0, heartT = 0;
 const catCurl = document.getElementById("catCurl"), curlBody = document.getElementById("curlBody");
 const NAP_IN = 0.55, NAP_OUT = 0.5; // se echa · se levanta
+let jumpTarget = null;   // renglón al que salta cuando acompaña un clic
+let fish = null;         // pescadito de píxeles cuando le dan de comer
+
+// ---------- Noche ----------
+// De 22:00 a 6:00 la página se oscurece y el gato que camina se duerme.
+// Para probar otra hora: añade ?hora=23 al final de la dirección.
+const HOUR_OVERRIDE = new URLSearchParams(location.search).get("hora");
+function hourNow() {
+  if (HOUR_OVERRIDE !== null && !isNaN(+HOUR_OVERRIDE)) return +HOUR_OVERRIDE;
+  const d = new Date(); return d.getHours() + d.getMinutes() / 60;
+}
+const isNight = () => { const h = hourNow(); return h >= 22 || h < 6; };
 const catEye = document.getElementById("catEye");
 let fx = 0, fy = 0, face = 1, x0 = 0, x1 = 0, dur = 2, sitFor = 0;
 let jx0 = 0, jy0 = 0, jx1 = 0, jy1 = 0, jdur = 0.7, jh = 18;
@@ -566,6 +580,8 @@ function planJump() {
 
 // ---- Polvo de píxeles ----
 const parts = [];
+// pez mirando a la izquierda (la cabeza se come primero)
+const FISH = [".###...#", "#####.##", "#.######", "#####.##", ".###...#"];
 const COLORS = ["255,255,255", "255,255,255", "255,255,255", "190,235,255", "255,200,230"];
 function emit(x, y, n, spread, life, up) {
   for (let i = 0; i < n && parts.length < 900; i++) {
@@ -579,6 +595,19 @@ function emit(x, y, n, spread, life, up) {
 }
 // Corazón de píxeles (5×5 celdas) que sube despacio
 const HEART = [".#.#.", "#####", "#####", ".###.", "..#.."];
+function drawFish() {
+  if (!fish) return;
+  const S = 3, cols = FISH[0].length;
+  const gone = Math.floor(fish.eaten * (cols + 1)); // columnas ya comidas desde la cabeza
+  FISH.forEach((row, j) => [...row].forEach((c, i) => {
+    if (c !== "#" || i < gone) return;
+    const ix = fish.face > 0 ? i : cols - 1 - i; // la cabeza siempre hacia el gato
+    const gx = Math.round((fish.x + (ix - cols / 2) * S + PAD) / S) * S;
+    const gy = Math.round((fish.y + (j - FISH.length) * S + PAD) / S) * S;
+    dctx.fillStyle = "rgba(140,215,255,.95)";
+    dctx.fillRect(gx, gy, S, S);
+  }));
+}
 function emitHeart(x, y) {
   const S = 3, vx = rnd(-3, 3), vy = rnd(-11, -8), life = rnd(2.2, 2.8);
   HEART.forEach((row, j) => [...row].forEach((c, i) => {
@@ -601,22 +630,27 @@ function stepDust(dt) {
     dctx.fillStyle = `rgba(${p.c},${(p.heart ? k : k * k * 0.9).toFixed(3)})`;
     dctx.fillRect(gx, gy, p.s, p.s);
   }
+  drawFish();
 }
 
 // ---- Dibujo del gato (coordenadas locales: patas en y=0, mira a la derecha) ----
 function draw(t) {
   let squash = 1, lift = 0, legMode = "walk";
-  if (phase === "sit" || phase === "look" || phase === "nap") legMode = "sit";
+  if (phase === "sit" || phase === "look" || phase === "nap" || phase === "eat") legMode = "sit";
   // Siesta: se echa (el cuerpo de pie se encoge y se desvanece) y aparece enroscado
   let curl = 0;
   if (phase === "nap") {
     curl = Math.min(ease(clamp(pt / NAP_IN, 0, 1)), ease(clamp((napFor - pt) / NAP_OUT, 0, 1)));
     squash = 1 - 0.35 * curl;
+  } else if (phase === "sleep") { // de noche: enroscado hasta que amanezca
+    curl = ease(clamp(pt / NAP_IN, 0, 1));
+    squash = 1 - 0.35 * curl;
   }
   catCurl.setAttribute("opacity", curl.toFixed(2));
   catBody.style.opacity = (1 - curl).toFixed(2);
   if (curl > 0) curlBody.setAttribute("transform", `scale(1 ${(1 + Math.sin(t / 620) * 0.045).toFixed(3)})`);
-  catEye.setAttribute("ry", "1.5");
+  // ojos cerrados mientras ronronea
+  catEye.setAttribute("ry", phase === "eat" && pt > EAT_END ? "0.25" : "1.5");
   if (phase === "crouch") { squash = 1 - 0.22 * ease(clamp(pt / CROUCH, 0, 1)); legMode = "sit"; }
   if (phase === "jump") legMode = "jump";
   if (phase === "land") { squash = 1 - 0.18 * Math.sin(clamp(pt / LAND, 0, 1) * Math.PI); }
@@ -648,7 +682,9 @@ function draw(t) {
   const bob = phase === "walk" ? Math.abs(Math.sin(gait * Math.PI * 2)) * -0.8 : 0;
   const tiltJ = phase === "jump" ? (jy1 > jy0 ? 1 : -1) * Math.cos(clamp(pt / jdur, 0, 1) * Math.PI) * -14 : 0;
   catBody.setAttribute("transform", `translate(0 ${(bob - lift).toFixed(2)}) rotate(${tiltJ.toFixed(1)} 0 -8) scale(1 ${squash.toFixed(3)})`);
-  const look = phase === "look" ? lookAng : phase === "nap" ? 22 : phase === "sit" ? Math.sin(t / 900) * 8 : 0;
+  const look = phase === "look" ? lookAng : phase === "nap" ? 22
+    : phase === "eat" ? (pt < EAT_DROP ? 10 : pt < EAT_END ? 26 + Math.sin(t / 70) * 6 : -6)
+    : phase === "sit" ? Math.sin(t / 900) * 8 : 0;
   catHead.setAttribute("transform", `rotate(${look.toFixed(1)} 12 -15)`);
   catPos.setAttribute("transform", `translate(${fx.toFixed(1)} ${fy.toFixed(1)}) scale(${face * sc} ${sc})`);
 }
@@ -675,6 +711,30 @@ function frame(t) {
     const w = wrap.getBoundingClientRect();
     cx = ptr.x - w.left; cy = ptr.y - w.top;
     near = Math.hypot(cx - fx, cy - (fy - 14 * sc)) < 95 * sc;
+  }
+  // de noche se duerme en cuanto termina lo que estaba haciendo
+  if (isNight() && (phase === "walk" || phase === "sit" || phase === "look")) { phase = "sleep"; pt = 0; meetPending = false; }
+  if (phase === "sleep") {
+    fy = L.top;
+    if (!isNight()) { phase = "walk"; pt = 0; planWalk(); }
+    draw(t); stepDust(dt); requestAnimationFrame(frame); return;
+  }
+  if (phase === "eat") {
+    fy = L.top;
+    if (pt < EAT_DROP) { // el pez cae delante de él
+      fish.y = lerp(fish.y0, fish.y1, ease(pt / EAT_DROP));
+    } else if (pt < EAT_END) { // come, dejando migas
+      fish.y = fish.y1;
+      fish.eaten = (pt - EAT_DROP) / (EAT_END - EAT_DROP);
+      crumbT -= dt;
+      if (crumbT <= 0) { crumbT = 0.16; emit(fish.x - face * 6 * sc, fish.y - 4, 2, 3, 0.6, 12); }
+    } else { // ronronea: ondas de píxeles
+      fish = null;
+      purrT -= dt;
+      if (purrT <= 0) { purrT = 0.38; purr(fx + face * 12 * sc, fy - 15 * sc); }
+      if (pt >= EAT_TOTAL) { lookRestUntil = clock + 4; phase = "walk"; pt = 0; planWalk(); }
+    }
+    draw(t); stepDust(dt); requestAnimationFrame(frame); return;
   }
   if (near && clock > lookRestUntil && (phase === "walk" || phase === "sit")) { phase = "look"; pt = 0; meetPending = false; }
   if (phase === "look") {
@@ -732,7 +792,9 @@ function frame(t) {
     const n = jy1 > jy0 ? 5 : 2;
     emit(fx - face * 6 * sc, fy - 9 * sc, n, 5 * sc, jy1 > jy0 ? 2.2 : 1.3, 10);
     if (q >= 1) {
-      idx += dv; fy = lines[idx].top; phase = "land"; pt = 0;
+      idx = jumpTarget !== null ? jumpTarget : idx + dv; jumpTarget = null;
+      if (idx + dv < 0 || idx + dv >= lines.length) dv = -dv;
+      fy = lines[idx].top; phase = "land"; pt = 0;
       emit(fx, fy - 1, 14, 9, 1.1, 22);
     }
   } else { // land
@@ -744,12 +806,51 @@ function frame(t) {
   requestAnimationFrame(frame);
 }
 
+// ---- Darle de comer: al tocar al gato cae un pescadito ----
+const EAT_DROP = 0.45, EAT_END = 2.1, EAT_TOTAL = 3.4;
+let crumbT = 0, purrT = 0;
+function purr(x, y) {
+  for (let i = 0; i < 20; i++) {
+    const a = (i / 20) * Math.PI * 2;
+    parts.push({ x: x + Math.cos(a) * 6, y: y + Math.sin(a) * 6, vx: Math.cos(a) * 34, vy: Math.sin(a) * 34, g: 0, s: 2, life: 0.55, age: 0, c: "255,255,255" });
+  }
+}
+function feed() {
+  if (!ready || reduceMotion.matches) return;
+  if (!["walk", "sit", "look", "sleep"].includes(phase)) return;
+  phase = "eat"; pt = 0; crumbT = 0; purrT = 0; meetPending = false;
+  const x = fx + face * 22 * sc;
+  fish = { x, y0: fy - 60 * sc, y1: fy - 1, y: fy - 60 * sc, eaten: 0, face };
+}
+document.getElementById("catHit").addEventListener("click", e => { e.stopPropagation(); e.preventDefault(); feed(); });
+
+// ---- Acompañar: al hacer clic en un enlace, el gato salta hasta ese renglón ----
+// Devuelve cuántos segundos tarda el salto (para esperar antes de navegar).
+function catGoTo(a) {
+  if (!ready || reduceMotion.matches || phase === "jump") return 0;
+  const i = [...list.querySelectorAll(".link")].indexOf(a);
+  if (i < 0 || !lines[i]) return 0;
+  fish = null; meetPending = false;
+  if (i === idx) { face = Math.sign((lines[i].left + 30) - fx) || face; phase = "look"; pt = 0; lookAng = 20; return 0; }
+  const T = lines[i];
+  jx0 = fx; jy0 = lines[idx].top;
+  jx1 = clamp(T.left + 26 * sc, T.left + 10, Math.max(T.left + 10, T.right - 10));
+  jy1 = T.top;
+  const gap = Math.abs(jy1 - jy0);
+  jdur = Math.min(0.95, 0.42 + gap / 700);
+  jh = (jy1 > jy0 ? 16 : 24 + gap * 0.2) * sc;
+  face = Math.sign(jx1 - jx0) || face;
+  jumpTarget = i; phase = "jump"; pt = 0;
+  emit(fx, fy - 2, 8, 6, 0.9, 18);
+  return jdur;
+}
+
 function resetCat() {
   ready = false;
   measure();
   if (!lines.length) return;
   idx = 0; dv = 1; phase = "walk"; pt = 0; gait = 0; last = null;
-  parts.length = 0;
+  parts.length = 0; fish = null; jumpTarget = null;
   fx = (lines[0].left + lines[0].right) / 2;
   fy = lines[0].top;
   planWalk();
@@ -1063,6 +1164,48 @@ try {
     taps = taps.filter(t => now - t < 900); taps.push(now);
     if (taps.length >= 3) { taps = []; kitten(); }
   });
+})();
+
+// ---------- Noche y madrugada ----------
+(() => {
+  const late = document.createElement("p");
+  late.className = "late";
+  late.setAttribute("aria-live", "polite");
+  document.querySelector(".head").appendChild(late);
+  function apply() {
+    const h = hourNow();
+    document.documentElement.classList.toggle("night", isNight());
+    // a la madrugada (3:00–5:00) aparece un mensaje escondido
+    if (h >= 3 && h < 5) {
+      const d = new Date();
+      const hh = HOUR_OVERRIDE !== null ? Math.floor(h) : d.getHours();
+      const mm = HOUR_OVERRIDE !== null ? "00" : String(d.getMinutes()).padStart(2, "0");
+      late.textContent = `son las ${hh}:${mm} y sigues aquí. la metáfora tampoco duerme.`;
+      late.classList.add("on");
+    } else late.classList.remove("on");
+  }
+  apply();
+  setInterval(apply, 60000);
+})();
+
+// ---------- Interferencia sobre la ilustración ----------
+// De vez en cuando, una franja de señal rota barre la imagen de arriba abajo.
+(() => {
+  const col = document.querySelector(".col--right");
+  if (!col) return;
+  const band = document.createElement("div");
+  band.className = "static";
+  col.appendChild(band);
+  function sweep() {
+    if (!document.hidden && !reduceMotion.matches) {
+      band.classList.remove("sweep"); col.classList.remove("glitch");
+      void band.offsetWidth; // reinicia la animación
+      band.classList.add("sweep"); col.classList.add("glitch");
+      setTimeout(() => col.classList.remove("glitch"), 900);
+    }
+    setTimeout(sweep, 12000 + Math.random() * 14000);
+  }
+  setTimeout(sweep, 5000);
 })();
 
 route();

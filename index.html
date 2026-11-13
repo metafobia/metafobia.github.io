@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<!--
+  metafobia
+  ─────────
+  si estás leyendo esto,
+  ya cruzaste la piel de la página.
+  aquí no hay metáforas:
+  solo etiquetas que fingen ser poemas
+  y poemas que fingen ser etiquetas.
+-->
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -11,6 +20,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- el cuerpo de la obra empieza aquí. respira. -->
 <main class="layout">
   <section class="col col--left">
     <header class="head">
@@ -23,7 +33,9 @@
 
       <canvas class="dust" id="dust" aria-hidden="true"></canvas>
       <svg class="cat" id="cat" width="1" height="1" aria-hidden="true" focusable="false">
+        <!-- un gato hecho de curvas: no es un gato, es la idea de un gato que camina sobre las palabras -->
         <g id="catPos">
+          <ellipse id="catHit" cx="2" cy="-12" rx="20" ry="14" fill="transparent"/>
           <g id="catBody">
             <path id="tail" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
             <g id="legs" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
@@ -52,10 +64,13 @@
     </nav>
   </section>
 
+  <!-- a la derecha, una imagen que se deshace cuando la miras demasiado -->
   <section class="col col--right" aria-hidden="true">
     <img class="art" src="imagen.png" alt="">
   </section>
 </main>
+<!-- lo que sigue no se ve, pero lo mueve todo. como el insomnio. -->
 <script src="script.js"></script>
+<!-- fin. o pausa. en esta página nunca se sabe. -->
 </body>
 </html>

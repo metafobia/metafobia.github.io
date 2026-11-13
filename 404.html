@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+  404
+  ───
+  buscaste una puerta
+  y encontraste una pared pintada de puerta.
+  así empiezan casi todas las metáforas.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>esta metáfora no existe · Metafobia</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="32x32">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;color:#e6e6e6;font-family:Georgia,"Times New Roman",serif}
+  body{display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow:hidden}
+  main{text-align:center;max-width:34rem;position:relative;z-index:2}
+  .code{font:400 clamp(4rem,16vw,8rem)/1 Georgia,serif;letter-spacing:.08em;color:#fff;
+    text-shadow:-3px 0 rgba(255,60,140,.85),3px 0 rgba(80,220,255,.85),0 0 18px rgba(255,255,255,.5);
+    animation:split 2.8s steps(1) infinite}
+  @keyframes split{
+    0%,86%,100%{text-shadow:-3px 0 rgba(255,60,140,.85),3px 0 rgba(80,220,255,.85),0 0 18px rgba(255,255,255,.5);transform:none}
+    88%{text-shadow:6px 0 rgba(255,60,140,.9),-6px 0 rgba(80,220,255,.9),0 0 18px rgba(255,255,255,.5);transform:skewX(-6deg) translateX(-3px)}
+    92%{text-shadow:-1px 0 rgba(255,60,140,.9),1px 0 rgba(80,220,255,.9),0 0 18px rgba(255,255,255,.5);transform:skewX(3deg) translateX(2px)}
+  }
+  h1{margin-top:1.2rem;font-weight:400;font-style:italic;font-size:clamp(1.2rem,3.6vw,1.7rem);letter-spacing:.04em;
+    text-shadow:0 0 10px rgba(255,255,255,.45)}
+  p{margin-top:1rem;color:#8a8a8a;font-size:.98rem;line-height:1.7}
+  a.back{display:inline-block;margin-top:2.2rem;color:#e6e6e6;text-decoration:none;font:.85rem "Courier New",Courier,monospace;
+    letter-spacing:.08em;border:1px solid #333;border-radius:4px;padding:.6rem 1rem;transition:color .3s,border-color .3s,box-shadow .3s}
+  a.back span{color:#50dcff;margin-right:.4em}
+  a.back:hover,a.back:focus-visible{color:#fff;border-color:#666;box-shadow:0 0 16px rgba(255,255,255,.18);outline:none}
+  canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+  svg{position:fixed;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none;z-index:3;filter:drop-shadow(0 0 4px rgba(255,255,255,.6))}
+  @media (prefers-reduced-motion:reduce){.code{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="dust" aria-hidden="true"></canvas>
+<main>
+  <div class="code" aria-hidden="true">404</div>
+  <h1>esta metáfora no existe… todavía</h1>
+  <p>Buscaste una puerta y encontraste una pared pintada de puerta.<br>
+     El gato también se perdió: lleva un rato olfateando el vacío.</p>
+  <a class="back" href="/"><span aria-hidden="true">←</span> volver a Metafobia</a>
+</main>
+
+<!-- el gato perdido -->
+<svg id="lost" aria-hidden="true" focusable="false">
+  <g id="pos">
+    <text id="q" x="10" y="-30" fill="#fff" font-family="Courier New, monospace" font-size="9">?</text>
+    <path id="tail" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+    <g stroke="#fff" stroke-width="2.2" stroke-linecap="round"><line/><line opacity=".75"/><line opacity=".75"/><line/></g>
+    <ellipse cx="0" cy="-10" rx="11" ry="5.5" fill="#fff"/>
+    <g id="head">
+      <path d="M7.4 -16.5 L8.6 -24 L11.6 -19.6 Z M12.6 -19.6 L15.8 -24 L16.8 -16.5 Z" fill="#fff"/>
+      <circle cx="12" cy="-15" r="5.2" fill="#fff"/>
+      <ellipse cx="14.4" cy="-15.8" rx="0.9" ry="1.5" fill="#000"/>
+    </g>
+  </g>
+</svg>
+
+<script>
+// El gato camina de un lado a otro por abajo, se detiene a olfatear y deja polvo.
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pos = document.getElementById("pos"), head = document.getElementById("head"), tail = document.getElementById("tail");
+  const legs = [...document.querySelectorAll("#lost line")], q = document.getElementById("q");
+  const cv = document.getElementById("dust"), c = cv.getContext("2d");
+  let W, H, d, parts = [];
+  function size() { d = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * d; cv.height = H * d; }
+  size(); addEventListener("resize", size);
+  const S = innerWidth < 600 ? 1.5 : 2;
+  let x = W * 0.2, dir = 1, mode = "walk", t0 = 0, gait = 0, last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const y = H - 28;
+    if (mode === "walk") {
+      x += dir * 55 * dt; gait += dt * 3.2;
+      if (Math.random() < 0.25) parts.push({ x: x - dir * 10 * S, y: y - 2, vx: -dir * 15, vy: -Math.random() * 12, life: .8, age: 0 });
+      if (x > W - 40 || x < 40) dir = -dir;
+      if (Math.random() < 0.004) { mode = "sniff"; t0 = now; }
+    } else if (now - t0 > 2200) mode = "walk";
+    [[7, 0], [5, .5], [-6, .5], [-8, 0]].forEach(([hx, off], i) => {
+      const ph = (gait + off) % 1, walk = mode === "walk";
+      legs[i].setAttribute("x1", hx); legs[i].setAttribute("y1", -7);
+      legs[i].setAttribute("x2", (hx + (walk ? Math.sin(ph * 6.283) * 3.2 : 0)).toFixed(1));
+      legs[i].setAttribute("y2", (walk ? -Math.max(0, Math.cos(ph * 6.283)) * 2.4 : 0).toFixed(1));
+    });
+    const sniff = mode === "sniff" ? 24 + Math.sin(now / 80) * 4 : 0;
+    head.setAttribute("transform", `rotate(${sniff.toFixed(1)} 12 -15)`);
+    tail.setAttribute("d", `M-10 -11 Q-20 -13 ${(-17 + Math.sin(now / 300) * 3).toFixed(1)} -24`);
+    q.setAttribute("opacity", mode === "sniff" ? (0.5 + 0.5 * Math.sin(now / 200)).toFixed(2) : "0");
+    pos.setAttribute("transform", `translate(${x.toFixed(1)} ${y}) scale(${dir * S} ${S})`);
+    c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, W, H);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i]; p.age += dt;
+      if (p.age > p.life) { parts.splice(i, 1); continue; }
+      p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 14 * dt;
+      c.fillStyle = `rgba(255,255,255,${((1 - p.age / p.life) * .8).toFixed(2)})`;
+      c.fillRect(Math.round(p.x / 2) * 2, Math.round(p.y / 2) * 2, 2, 2);
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  if (reduce) { mode = "sniff"; frame(performance.now()); } else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
