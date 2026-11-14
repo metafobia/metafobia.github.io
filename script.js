@@ -89,7 +89,20 @@ const slug = t => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "
 // Cada obra visitada se "gasta": su título pierde letras y brillo.
 // Se guarda solo en este navegador (localStorage).
 const MEM_KEY = "metafobia:visitas";
-function loadMem() { try { return JSON.parse(localStorage.getItem(MEM_KEY)) || {}; } catch (e) { return {}; } }
+// Lee la memoria y descarta cualquier cosa que no tenga la forma esperada
+// ({ "https://...": número }), por si alguien la manipula a mano.
+function loadMem() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(MEM_KEY));
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+    const clean = {};
+    Object.keys(raw).slice(0, 200).forEach(k => {
+      const n = raw[k];
+      if (typeof k === "string" && k.length < 300 && /^https:\/\//.test(k) && Number.isInteger(n) && n > 0 && n < 10000) clean[k] = n;
+    });
+    return clean;
+  } catch (e) { return {}; }
+}
 function remember(url) {
   try { const m = loadMem(); m[url] = (m[url] || 0) + 1; localStorage.setItem(MEM_KEY, JSON.stringify(m)); } catch (e) {}
 }
@@ -193,12 +206,17 @@ function renderMain() {
   const repoOf = u => { const m = u.match(/^https:\/\/[^/]+\.github\.io\/([^/?#]+)/i); return m ? decodeURIComponent(m[1]).toLowerCase() : null; };
   if (LATEST) return; // obra elegida a mano: no se consulta GitHub
   try {
+    // Solo se aceptan nombres de repositorio válidos y descripciones cortas sin caracteres de control
+    const safeRepos = list => (Array.isArray(list) ? list : []).slice(0, 100)
+      .filter(x => x && typeof x.name === "string" && /^[A-Za-z0-9._-]{1,100}$/.test(x.name))
+      .map(x => ({ name: x.name, pages: x.pages === true,
+        desc: (typeof x.desc === "string" ? x.desc : "").replace(/[\u0000-\u001f\u007f<>]/g, "").trim().slice(0, 80) }));
     let repos = null;
-    try { repos = JSON.parse(sessionStorage.getItem("metafobia:repos2")); } catch (e) {}
+    try { repos = JSON.parse(sessionStorage.getItem("metafobia:repos2")); if (repos) repos = safeRepos(repos); } catch (e) { repos = null; }
     if (!repos) {
       const r = await fetch(`https://api.github.com/users/${GITHUB_USER}/repos?sort=pushed&direction=desc&per_page=50`);
       if (!r.ok) return;
-      repos = (await r.json()).map(x => ({ name: x.name, pages: !!x.has_pages, desc: x.description || "" }));
+      repos = safeRepos((await r.json()).map(x => ({ name: x && x.name, pages: !!(x && x.has_pages), desc: (x && x.description) || "" })));
       try { sessionStorage.setItem("metafobia:repos2", JSON.stringify(repos)); } catch (e) {}
     }
     const works = allWorks();
@@ -544,7 +562,7 @@ let fish = null;         // pescadito de píxeles cuando le dan de comer
 // Para probar otra hora: añade ?hora=23 al final de la dirección.
 const HOUR_OVERRIDE = new URLSearchParams(location.search).get("hora");
 function hourNow() {
-  if (HOUR_OVERRIDE !== null && !isNaN(+HOUR_OVERRIDE)) return +HOUR_OVERRIDE;
+  if (HOUR_OVERRIDE !== null && /^\d{1,2}(\.\d+)?$/.test(HOUR_OVERRIDE) && +HOUR_OVERRIDE < 24) return +HOUR_OVERRIDE;
   const d = new Date(); return d.getHours() + d.getMinutes() / 60;
 }
 const isNight = () => { const h = hourNow(); return h >= 22 || h < 6; };
@@ -1057,7 +1075,7 @@ async function visitorPoem() {
     <pre class="term-out" aria-live="polite"></pre>
     <form class="term-line" autocomplete="off">
       <label for="term-in" class="term-prompt">visitante@metafobia:~$</label>
-      <input id="term-in" class="term-in" type="text" spellcheck="false" autocapitalize="off" autocorrect="off" enterkeyhint="go" aria-label="Escribe un comando">
+      <input id="term-in" class="term-in" type="text" maxlength="200" spellcheck="false" autocapitalize="off" autocorrect="off" enterkeyhint="go" aria-label="Escribe un comando">
     </form>
     <div class="term-chips" aria-label="Comandos rápidos">
       <span class="dim">prueba:</span>
@@ -1164,13 +1182,16 @@ async function visitorPoem() {
     cat: async (arg) => {
       if (!arg) return print([{ t: "cat: ¿qué archivo? prueba «ls -a».", cls: "err" }]);
       try {
-        let path = arg.trim().replace(/^\/+/, "").replace(/\/$/, "");
-        if (path === ".gato") path = ".gato/gato.txt"; // .gato es una carpeta con su versión en texto
-        const r = await fetch(path, { cache: "no-store" });
+        // solo se pueden leer los archivos escondidos de la propia página
+        const FILES = { "robots.txt": "/robots.txt", "secreto.txt": "/secreto.txt", ".gato": "/.gato/gato.txt" };
+        const key = arg.trim().toLowerCase().replace(/^\/+/, "").replace(/\/$/, "");
+        const path = Object.prototype.hasOwnProperty.call(FILES, key) ? FILES[key] : null;
+        if (!path) throw 0;
+        const r = await fetch(path, { cache: "no-store", credentials: "omit" });
         if (!r.ok) throw 0;
-        const txt = await r.text();
+        const txt = (await r.text()).slice(0, 4000);
         return print(txt.replace(/\s+$/, "").split("\n").map(t => ({ t, cls: "file" })), 6);
-      } catch (e) { return print([{ t: `cat: ${arg}: no existe el archivo (o la metáfora)`, cls: "err" }]); }
+      } catch (e) { return print([{ t: `cat: ${arg.slice(0, 60)}: no existe el archivo (o la metáfora)`, cls: "err" }]); }
     },
     fecha: async () => print([new Date().toLocaleString("es", { dateStyle: "full", timeStyle: "short" })]),
     gato: async () => { close(); setTimeout(() => window.summonKitten && window.summonKitten(), 250); },
@@ -1211,7 +1232,7 @@ async function visitorPoem() {
   COMMANDS["quien"] = async () => COMMANDS.whoami();
 
   async function run(raw) {
-    const line = raw.trim();
+    const line = String(raw).replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 200);
     const sp = document.createElement("span"); sp.className = "cmd"; sp.textContent = `visitante@metafobia:~$ ${line}\n`; out.appendChild(sp);
     if (!line) return;
     history.push(line); hpos = history.length;
