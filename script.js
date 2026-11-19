@@ -75,8 +75,8 @@ const sections = [
 
 // "Lo más reciente": la obra destacada arriba de la página principal.
 // Escribe aquí su enlace. Si lo cambias por null, la página elige sola
-// la obra cuyo repositorio de GitHub se actualizó por última vez.
-const LATEST = null;
+// la obra cuyo repositorio se CREÓ más recientemente (editar una obra vieja no la mueve).
+const LATEST = "https://metafobian-code.github.io/Desgaste/";
 const LATEST_FALLBACK = LATEST || "https://metafobian-code.github.io/-ansibles/ansible-animacion-v5.html";
 const GITHUB_USER = "metafobian-code";
 // Repositorios que nunca deben salir como "lo más reciente" (en minúsculas).
@@ -218,12 +218,12 @@ function renderMain() {
       .map(x => ({ name: x.name, pages: x.pages === true,
         desc: (typeof x.desc === "string" ? x.desc : "").replace(/[\u0000-\u001f\u007f<>]/g, "").trim().slice(0, 80) }));
     let repos = null;
-    try { repos = JSON.parse(sessionStorage.getItem("metafobia:repos2")); if (repos) repos = safeRepos(repos); } catch (e) { repos = null; }
+    try { repos = JSON.parse(sessionStorage.getItem("metafobia:repos3")); if (repos) repos = safeRepos(repos); } catch (e) { repos = null; }
     if (!repos) {
-      const r = await fetch(`https://api.github.com/users/${GITHUB_USER}/repos?sort=pushed&direction=desc&per_page=50`);
+      const r = await fetch(`https://api.github.com/users/${GITHUB_USER}/repos?sort=created&direction=desc&per_page=50`);
       if (!r.ok) return;
       repos = safeRepos((await r.json()).map(x => ({ name: x && x.name, pages: !!(x && x.has_pages), desc: (x && x.description) || "" })));
-      try { sessionStorage.setItem("metafobia:repos2", JSON.stringify(repos)); } catch (e) {}
+      try { sessionStorage.setItem("metafobia:repos3", JSON.stringify(repos)); } catch (e) {}
     }
     const works = allWorks();
     for (const repo of repos) {
@@ -1175,7 +1175,7 @@ async function visitorPoem() {
       setTimeout(() => { window.location.href = "/privacidad/"; }, 900);
     },
     olvidar: async () => {
-      try { localStorage.removeItem(MEM_KEY); sessionStorage.removeItem("metafobia:repos2"); } catch (e) {}
+      try { localStorage.removeItem(MEM_KEY); sessionStorage.removeItem("metafobia:repos3"); } catch (e) {}
       document.querySelectorAll(".worn").forEach(li => li.classList.remove("worn"));
       await print([{ t: "memoria borrada. la página ya no recuerda tus visitas.", cls: "hit" }, { t: "(a veces olvidar también es un poema)", cls: "dim" }]);
       if (!location.hash) renderMain(); else route();
