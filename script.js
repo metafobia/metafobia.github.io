@@ -65,7 +65,8 @@ const sections = [
       { name: "Colaboración audiovisual", url: "https://vt.tiktok.com/ZSpJyAWkr" },
       { name: "Angel", url: "https://metafobian-code.github.io/Cursor/" },
       { name: "Neón Ne", url: "https://metafobian-code.github.io/infiernol/aureola-infiernol.html" },
-      { name: "Silencio", url: "https://metafobian-code.github.io/dead/" }
+      { name: "Silencio", url: "https://metafobian-code.github.io/dead/" },
+      { name: "Flame", url: "https://metafobian-code.github.io/Times/" }
     ]
   }
 ];
