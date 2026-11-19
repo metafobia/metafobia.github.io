@@ -39,7 +39,8 @@ const sections = [
       { name: "Bloc_notas", url: "https://metafobian-code.github.io/rr/" },
       { name: "Glitch", url: "https://metafobian-code.github.io/Glitch/" },
       { name: "Contexto de tokens", url: "https://metafobian-code.github.io/Tokens/" },
-      { name: "Cielo en error", url: "https://metafobian-code.github.io/Skyglitch/" }
+      { name: "Cielo en error", url: "https://metafobian-code.github.io/Skyglitch/" },
+      { name: "Desgaste", url: "https://metafobian-code.github.io/Desgaste/" }
     ]
   },
   {
