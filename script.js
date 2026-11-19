@@ -1327,6 +1327,23 @@ async function visitorPoem() {
   const cbtn = document.querySelector(".console-btn");
   if (cbtn) dock.appendChild(cbtn);
   dock.appendChild(btn);
+  // pantalla completa (solo en navegadores que lo permiten; Safari de iPhone no)
+  const de = document.documentElement, reqFs = de.requestFullscreen || de.webkitRequestFullscreen;
+  if (reqFs) {
+    const fsb = document.createElement("button");
+    fsb.type = "button"; fsb.className = "drift-btn fs-btn";
+    const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+    const paintFs = () => { fsb.innerHTML = isFs() ? '<span aria-hidden="true">✕</span> salir' : '<span aria-hidden="true">⛶</span> pantalla completa';
+      fsb.setAttribute("aria-label", isFs() ? "Salir de pantalla completa" : "Pantalla completa"); };
+    fsb.addEventListener("click", () => {
+      if (isFs()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else { const pr = reqFs.call(de); if (pr && pr.catch) pr.catch(() => {}); }
+    });
+    document.addEventListener("fullscreenchange", paintFs);
+    document.addEventListener("webkitfullscreenchange", paintFs);
+    paintFs();
+    dock.appendChild(fsb);
+  }
   const priv = document.createElement("a");
   priv.className = "priv-link";
   priv.href = "/privacidad/";
