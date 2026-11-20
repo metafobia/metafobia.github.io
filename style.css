@@ -19,7 +19,7 @@ body{background:#000;color:var(--fg);font-family:Georgia,"Times New Roman",serif
 .col--right{position:fixed;top:0;right:0;width:50%;height:100vh;height:100dvh;background:#0a0a0a;z-index:1}
 .art{display:block;width:100%;height:100%;object-fit:cover;object-position:var(--image-position)}
 
-.head{margin-bottom:clamp(1.5rem,5vh,3rem)}
+.head{margin-bottom:clamp(1.5rem,5vh,3rem);position:relative}
 .title{font-weight:400;font-size:clamp(1.8rem,3.4vw,3rem);letter-spacing:.05em;color:var(--fg-hi);text-shadow:0 0 10px rgba(255,255,255,.55),0 0 30px rgba(255,255,255,.25)}
 .subtitle{margin-top:.5rem;font-size:clamp(.8rem,1.1vw,1rem);font-style:italic;letter-spacing:.2em;color:#9a9a9a;text-shadow:0 0 8px rgba(255,255,255,.25)}
 
@@ -217,3 +217,11 @@ body{background:#000;color:var(--fg);font-family:Georgia,"Times New Roman",serif
 
 /* ---- Botón de pantalla completa ---- */
 .fs-btn span{color:#7dffa8}
+
+/* ---- Título que se vuelve «Metáfora 404» ---- */
+.title.is-404{color:#c8ffd9;text-shadow:-2px 0 rgba(255,60,140,.7),2px 0 rgba(80,220,255,.7),0 0 14px rgba(57,255,122,.55),0 0 34px rgba(57,255,122,.25)}
+.title-hint{position:absolute;left:0;top:100%;margin-top:.55rem;font:.76rem/1 "Courier New",Courier,monospace;letter-spacing:.08em;color:#7dffa8;
+  text-decoration:none;border:1px solid rgba(125,255,168,.45);border-radius:999px;padding:.4rem .75rem;background:rgba(0,0,0,.6);
+  opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .6s ease,transform .6s ease;white-space:nowrap}
+.title-hint.on{opacity:1;transform:none;pointer-events:auto}
+.title-hint:hover,.title-hint:focus-visible{color:#000;background:#7dffa8;outline:none}

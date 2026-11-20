@@ -347,7 +347,43 @@ titleEl.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " 
 window.addEventListener("pageshow", () => { titleGoing = false; titleEl.style.opacity = ""; });
 // El título se distorsiona solo de vez en cuando
 (function autoGlitch() {
-  setTimeout(() => { if (!document.hidden) scramble(titleEl, 800); autoGlitch(); }, 6000 + Math.random() * 6000);
+  setTimeout(() => { if (!document.hidden && !titleEl.classList.contains("is-404")) scramble(titleEl, 800); autoGlitch(); }, 6000 + Math.random() * 6000);
+})();
+
+// De vez en cuando el título se transforma en «Metáfora 404» (lo que quiere decir Metafobia)
+// y ofrece un enlace a la obra; después vuelve a ser «Metafobia».
+(function titleMetamorphosis() {
+  const BASE_TEXT = titleEl.textContent, ALT_TEXT = "Metáfora 404", HOLD = 7000;
+  const hint = document.createElement("a");
+  hint.className = "title-hint";
+  hint.href = "https://metafobian-code.github.io/metaforas/";
+  hint.innerHTML = '<span aria-hidden="true">↗</span> abrir Metáfora 404';
+  hint.tabIndex = -1;
+  hint.addEventListener("click", e => { e.preventDefault(); openTitle(); });
+  document.querySelector(".head").appendChild(hint);
+  const baseTab = document.title;
+  function morph(text) {
+    titleEl.dataset.text = text;
+    delete titleEl.dataset.busy;
+    scramble(titleEl, 900);
+  }
+  function toAlt() {
+    if (document.hidden || titleGoing || reduceMotion.matches) return;
+    titleEl.classList.add("is-404");
+    morph(ALT_TEXT);
+    hint.classList.add("on"); hint.tabIndex = 0;
+    if (document.title === baseTab) document.title = ALT_TEXT;
+    setTimeout(toBase, HOLD);
+  }
+  function toBase() {
+    if (titleGoing) return;
+    morph(BASE_TEXT);
+    titleEl.classList.remove("is-404");
+    hint.classList.remove("on"); hint.tabIndex = -1;
+    if (document.title === ALT_TEXT) document.title = baseTab;
+  }
+  (function loop() { setTimeout(() => { toAlt(); loop(); }, 22000 + Math.random() * 18000); })();
+  window.metaforaNow = toAlt; // para probar: metaforaNow() en la consola real
 })();
 document.addEventListener("focusin", e => {
   if (e.target.matches && e.target.matches("a.link")) scramble(e.target);
