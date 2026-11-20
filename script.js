@@ -77,7 +77,7 @@ const sections = [
 // "Lo más reciente": la obra destacada arriba de la página principal.
 // Escribe aquí su enlace. Si lo cambias por null, la página elige sola
 // la obra cuyo repositorio se CREÓ más recientemente (editar una obra vieja no la mueve).
-const LATEST = "https://metafobian-code.github.io/metaforas/";
+const LATEST = null;
 const LATEST_FALLBACK = LATEST || "https://metafobian-code.github.io/-ansibles/ansible-animacion-v5.html";
 const GITHUB_USER = "metafobian-code";
 // Repositorios que nunca deben salir como "lo más reciente" (en minúsculas).
