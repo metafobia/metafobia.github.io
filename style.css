@@ -40,7 +40,8 @@ body{background:#000;color:var(--fg);font-family:Georgia,"Times New Roman",serif
 @keyframes vanish{0%{opacity:1;filter:blur(0)}15%{opacity:0;filter:blur(2px)}100%{opacity:0;filter:blur(2px)}}
 
 /* Distorsión del título: desplazamiento de color tipo señal rota */
-.title{cursor:default}
+.title{cursor:pointer;transition:opacity .4s ease}
+.title:focus-visible{outline:1px dashed rgba(255,255,255,.5);outline-offset:6px}
 .title.glitching{animation:rgbsplit .16s steps(2) infinite}
 @keyframes rgbsplit{
   0%{text-shadow:-2px 0 rgba(255,60,140,.85),2px 0 rgba(80,220,255,.85),0 0 10px rgba(255,255,255,.55);transform:translateX(0) skewX(0)}

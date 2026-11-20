@@ -327,7 +327,24 @@ function onOver(e) {
 if (window.PointerEvent) document.addEventListener("pointerover", onOver);
 else document.addEventListener("mouseover", onOver);
 // En pantallas táctiles, tocar el título también lo distorsiona
-titleEl.addEventListener("click", () => scramble(titleEl, 800));
+// El título es la puerta permanente a «Metáfora 404»: lo que quiere decir Metafobia.
+const TITLE_URL = "https://metafobian-code.github.io/metaforas/";
+titleEl.setAttribute("role", "link");
+titleEl.setAttribute("tabindex", "0");
+titleEl.setAttribute("title", "Metáfora 404");
+titleEl.setAttribute("aria-label", "Metafobia: abrir Metáfora 404");
+let titleGoing = false;
+function openTitle() {
+  if (titleGoing) return;
+  titleGoing = true;
+  scramble(titleEl, 600);
+  if (!reduceMotion.matches && typeof dissolve === "function") setTimeout(() => { dissolve(titleEl); titleEl.style.opacity = "0"; }, 380);
+  remember(TITLE_URL);
+  setTimeout(() => { window.location.href = TITLE_URL; }, reduceMotion.matches ? 0 : 1050);
+}
+titleEl.addEventListener("click", openTitle);
+titleEl.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTitle(); } });
+window.addEventListener("pageshow", () => { titleGoing = false; titleEl.style.opacity = ""; });
 // El título se distorsiona solo de vez en cuando
 (function autoGlitch() {
   setTimeout(() => { if (!document.hidden) scramble(titleEl, 800); autoGlitch(); }, 6000 + Math.random() * 6000);
@@ -1413,13 +1430,6 @@ async function visitorPoem() {
     if (e.target.closest && e.target.closest("input, textarea, [contenteditable]")) return;
     buf = (buf + e.key.toLowerCase()).slice(-4);
     if (buf === "gato") { buf = ""; kitten(); }
-  });
-  // En pantallas táctiles: tres toques seguidos en el título
-  let taps = [];
-  titleEl.addEventListener("click", () => {
-    const now = performance.now();
-    taps = taps.filter(t => now - t < 900); taps.push(now);
-    if (taps.length >= 3) { taps = []; kitten(); }
   });
 })();
 
