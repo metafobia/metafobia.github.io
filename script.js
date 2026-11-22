@@ -21,7 +21,8 @@ const sections = [
       { name: "Robert’); DROP TABLE Students", url: "https://metafobian-code.github.io/Robert/" },
       { name: "Restart_sequence", url: "https://metafobian-code.github.io/-dem/" },
       { name: "Metáfora 404", url: "https://metafobian-code.github.io/metaforas/" },
-      { name: "Arder en el código", url: "https://metafobian-code.github.io/arderencodigo/" }
+      { name: "Arder en el código", url: "https://metafobian-code.github.io/arderencodigo/" },
+      { name: "Miles de copias de ti", url: "https://metafobian-code.github.io/Copias/" }
     ]
   },
   {
