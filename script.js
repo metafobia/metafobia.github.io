@@ -1745,6 +1745,86 @@ const isOut = () => performance.now() < fireOutUntil;
   requestAnimationFrame(frame);
 })();
 
+// ---------- Llamas de verdad: suben desde la ilustración y sobre algunos títulos ----------
+(() => {
+  if (!FUEGO || reduceMotion.matches) return;
+  const cv = document.createElement("canvas");
+  cv.className = "flames"; cv.setAttribute("aria-hidden", "true");
+  document.body.appendChild(cv);
+  const g = cv.getContext("2d");
+  let W = 0, H = 0, d = 1, last = performance.now(), T = 0;
+  function size() { d = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight; cv.width = W * d; cv.height = H * d; g.setTransform(d, 0, 0, d, 0, 0); }
+  size(); addEventListener("resize", size);
+  // «sprites» de fuego ya pintados: del centro blanco-amarillo al rojo
+  const sprite = (r, gg, b) => { const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
+    const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, `rgba(${r},${gg},${b},1)`); gr.addColorStop(.4, `rgba(${r},${gg},${b},.55)`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c; };
+  const SPR = [sprite(255, 245, 200), sprite(255, 205, 90), sprite(255, 140, 40), sprite(235, 70, 20), sprite(150, 30, 10)];
+  const parts = [];
+  const coarse = matchMedia("(pointer: coarse)").matches;
+  const DENS = coarse ? .6 : 1, PMAX = coarse ? 520 : 900;   // tabletas: menos partículas, mismo efecto
+  const art = document.querySelector(".col--right");
+  let hot = [], pickT = 0;
+  function pickTitles() {                       // la obra destacada siempre arde; además 2 títulos al azar
+    const ls = [...document.querySelectorAll("#projectList .link")].filter(a => !a.classList.contains("ashed"));
+    const feat = document.querySelector(".featured .link");
+    const others = ls.filter(a => a !== feat).sort(() => Math.random() - .5).slice(0, 2);
+    hot = (feat ? [feat] : []).concat(others);
+  }
+  window.addEventListener("hashchange", () => setTimeout(pickTitles, 700));
+  const tongue = (x, t, k) => Math.max(0, .5 + .5 * Math.sin(x * .031 * k + t * 1.7) * Math.cos(x * .013 * k - t * .9 + 1.3));
+  const live = { art: 0, title: 0 };
+  function emitLine(x0, x1, y, rate, power, k, dt, tag) {
+    const cap = tag === "art" ? PMAX * .65 : PMAX * .35;   // cada fuego con su propio presupuesto
+    const n = live[tag] > cap ? 0 : Math.min(220, (x1 - x0) * rate * dt * DENS);
+    for (let i = 0; i < n; i++) {
+      const x = x0 + Math.random() * (x1 - x0), tg = tongue(x, T, k);
+      if (Math.random() > .25 + tg) continue;
+      parts.push({ x, y: y + Math.random() * 4, vx: (Math.random() - .5) * 8, vy: -(power * (.4 + tg * 1.1) * (.75 + Math.random() * .4)),
+        r: (12 + Math.random() * 14) * (.55 + tg * .8) * k, age: 0, life: .45 + Math.random() * .45 + tg * .45, ph: Math.random() * 6.28, w: 6 + Math.random() * 8, tag });
+      live[tag]++;
+    }
+  }
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
+    g.clearRect(0, 0, W, H);
+    if (!document.hidden && !isOut()) {
+      // 1) la ilustración arde desde abajo (y por su borde izquierdo en pantallas anchas)
+      if (art) {
+        const r = art.getBoundingClientRect();
+        if (r.bottom > 0 && r.top < H) {
+          emitLine(r.left, r.right, Math.min(r.bottom, H) + 6, 2.6, 190, 1.4, dt, "art");
+          if (r.left > 40 && innerWidth > 760) for (let i = 0; i < 6 * dt * 60; i++) {   // lenguas que trepan por el borde
+            const y = r.top + Math.random() * (Math.min(r.bottom, H) - r.top), tg = tongue(y, T * .8, .7);
+            if (Math.random() > .15 + tg * .6) continue;
+            parts.push({ x: r.left + Math.random() * 6, y, vx: 10 + Math.random() * 25, vy: -(50 + tg * 90), r: 5 + Math.random() * 8, age: 0, life: .4 + Math.random() * .5, ph: Math.random() * 6.28 });
+          }
+        }
+      }
+      // 2) llamitas sobre algunos títulos (cambian cada tanto)
+      pickT -= dt; if (pickT <= 0 || !hot.every(a => a.isConnected)) { pickTitles(); pickT = 18 + Math.random() * 10; }
+      hot.forEach((a, i) => {
+        const r = a.getBoundingClientRect(); if (r.bottom < 0 || r.top > H || !r.width) return;
+        const big = a.closest(".featured") ? 1 : .6;
+        emitLine(r.left + 4, r.right - 4, r.top + 4, 7 * big, 70 * big, .5 * big + .22, dt, "title");   // nacen sobre las letras, no encima de ellas
+      });
+    }
+    g.globalCompositeOperation = "lighter";
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i]; p.age += dt;
+      if (p.age >= p.life) { if (p.tag) live[p.tag]--; parts.splice(i, 1); continue; }
+      p.vy -= 70 * dt; p.x += (p.vx + Math.sin(p.ph + p.age * 10) * (p.w || 10)) * dt; p.y += p.vy * dt;
+      const k = p.age / p.life, rad = p.r * (1 - k * .75);
+      const idx = Math.min(SPR.length - 1, Math.floor(k * SPR.length));
+      g.globalAlpha = (k < .12 ? k / .12 : 1) * (1 - k) * .6;
+      g.drawImage(SPR[idx], p.x - rad, p.y - rad, rad * 2, rad * 2);
+    }
+    g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
 // ---------- La página se quema con el tiempo ----------
 // Cada minuto avanza el fuego: la ilustración se carboniza por los bordes y algunos títulos
 // quedan en ceniza (siguen funcionando). Al recargar, todo vuelve a arder desde el principio.

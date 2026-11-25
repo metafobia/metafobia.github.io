@@ -301,3 +301,5 @@ body{background:#000;color:var(--fg);font-family:Georgia,"Times New Roman",serif
 .apagado body::after,.apagado .col--right::after{opacity:0!important;animation:none!important;transition:opacity 1.5s}
 .apagado .art{filter:grayscale(.85) brightness(.7)}
 @media (prefers-reduced-motion:reduce){ .fuego .featured .link{animation:none} .fuego .art{filter:sepia(.55) saturate(1.7) hue-rotate(-12deg) contrast(1.08) brightness(.88)} }
+
+.flames{position:fixed;inset:0;width:100%;height:100%;z-index:7;pointer-events:none}
