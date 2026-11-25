@@ -1,7 +1,9 @@
 // ---------- Estética del momento ----------
-// FUEGO = true  -> la página arde: títulos en llamas, brasas, consola en cenizas, sin gatos.
-// FUEGO = false -> vuelve la Metafobia de siempre (gatos, polvo blanco, poema en la consola).
-const FUEGO = true;
+// La página arde durante una semana y después vuelve sola a la Metafobia de siempre
+// (gatos, polvo blanco, poema en la consola). El fuego se apaga el 2 de diciembre de 2026
+// a medianoche, en la hora de cada visitante. Para encenderlo o apagarlo a mano, cambia la fecha.
+const FUEGO_HASTA = new Date(2026, 11, 2, 0, 0, 0);   // meses desde 0: 11 = diciembre
+const FUEGO = Date.now() < FUEGO_HASTA.getTime();
 if (FUEGO) document.documentElement.classList.add("fuego");
 const FIRE_COLORS = ["255,236,170", "255,196,90", "255,150,50", "255,110,30", "235,70,20", "120,110,105"];
 
