@@ -1,5 +1,9 @@
-
-
+// ---------- Estética del momento ----------
+// FUEGO = true  -> la página arde: títulos en llamas, brasas, consola en cenizas, sin gatos.
+// FUEGO = false -> vuelve la Metafobia de siempre (gatos, polvo blanco, poema en la consola).
+const FUEGO = true;
+if (FUEGO) document.documentElement.classList.add("fuego");
+const FIRE_COLORS = ["255,236,170", "255,196,90", "255,150,50", "255,110,30", "235,70,20", "120,110,105"];
 
 // Secciones de la página principal. Cada una muestra su propia lista de obras.
 // Para añadir una obra: copia una línea { name: "...", url: "..." } dentro de su sección.
@@ -451,7 +455,7 @@ function fxFrame(now) {
       x = p.x + Math.sin(p.age * 18 + p.y) * 1.5; y = p.y;
       k = 1 - p.age / p.life;
     }
-    fctx.fillStyle = `rgba(${p.c || "255,255,255"},${(k * (p.a || 0.95)).toFixed(3)})`;
+    fctx.fillStyle = `rgba(${p.c || (FUEGO ? "255,150,55" : "255,255,255")},${(k * (p.a || 0.95)).toFixed(3)})`;
     fctx.fillRect(Math.round(x / p.s) * p.s, Math.round(y / p.s) * p.s, p.s, p.s);
   }
   if (fxParts.length) requestAnimationFrame(fxFrame);
@@ -665,6 +669,7 @@ const parts = [];
 // pez mirando a la izquierda (la cabeza se come primero)
 const FISH = [".###...#", "#####.##", "#.######", "#####.##", ".###...#"];
 const COLORS = ["255,255,255", "255,255,255", "255,255,255", "190,235,255", "255,200,230"];
+if (FUEGO) COLORS.splice(0, COLORS.length, ...FIRE_COLORS); // polvo y lluvias de píxeles en color brasa
 function emit(x, y, n, spread, life, up) {
   for (let i = 0; i < n && parts.length < 900; i++) {
     parts.push({
@@ -929,6 +934,7 @@ function catGoTo(a) {
 
 function resetCat() {
   ready = false;
+  if (FUEGO) return; // los gatos huyeron del fuego
   measure();
   if (!lines.length) return;
   idx = 0; dv = 1; phase = "walk"; pt = 0; gait = 0; last = null;
@@ -1257,7 +1263,9 @@ async function visitorPoem() {
       } catch (e) { return print([{ t: `cat: ${arg.slice(0, 60)}: no existe el archivo (o la metáfora)`, cls: "err" }]); }
     },
     fecha: async () => print([new Date().toLocaleString("es", { dateStyle: "full", timeStyle: "short" })]),
-    gato: async () => { close(); setTimeout(() => window.summonKitten && window.summonKitten(), 250); },
+    gato: async () => {
+      if (FUEGO) { await print([{ t: "los gatos huyeron del fuego. solo dejaron huellas de ceniza.", cls: "ash-s" }]); setTimeout(() => window.summonKitten && window.summonKitten(), 400); return; }
+      close(); setTimeout(() => window.summonKitten && window.summonKitten(), 250); },
     matrix: async () => {
       await print([{ t: "despertando...", cls: "hit" }]);
       for (let i = 0; i < 420; i++) fxParts.push({ x: Math.random() * innerWidth, y: -Math.random() * innerHeight, vx: 0, vy: 120 + Math.random() * 160, g: 0,
@@ -1334,8 +1342,14 @@ async function visitorPoem() {
   async function boot() {
     out.replaceChildren();
     busy = true; input.disabled = true;
-    await print([{ t: "> metafobia.leer('poema_oculto.txt')", cls: "cmd" }, { t: "  cargando metáforas... ok", cls: "dim" }, { t: "" }]);
-    await print(POEM.map(t => ({ t, cls: "poem" })), 16);
+    if (FUEGO) {
+      await print([{ t: "> metafobia.leer('poema_oculto.txt')", cls: "cmd" }, { t: "  buscando metáforas... ardieron", cls: "dim" }, { t: "" }]);
+      await print([{ t: "Solo quedan cenizas.", cls: "ash" }], 70);
+      await print([{ t: "" }, { t: "/* el poema sigue aquí, entre el humo: escribe «poema» */", cls: "dim" }]);
+    } else {
+      await print([{ t: "> metafobia.leer('poema_oculto.txt')", cls: "cmd" }, { t: "  cargando metáforas... ok", cls: "dim" }, { t: "" }]);
+      await print(POEM.map(t => ({ t, cls: "poem" })), 16);
+    }
     await print([{ t: "" }, { t: "/* si llegaste hasta aquí, ya eres parte de la obra */", cls: "dim" },
       { t: "/* esta consola acepta comandos. escribe «ayuda». */", cls: "hit" }]);
     busy = false; input.disabled = false;
@@ -1433,7 +1447,7 @@ async function visitorPoem() {
         s: Math.random() < 0.7 ? 2 : 3, age: -Math.random() * 1.2, life: 2.2 + Math.random() * 1.2, c: COLORS[(Math.random() * COLORS.length) | 0], a: 0.85 });
     }
     startFx();
-    if (reduceMotion.matches) { busy = false; return; }
+    if (reduceMotion.matches || FUEGO) { busy = false; return; }
     const NSs = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(NSs, "svg");
     svg.setAttribute("class", "kitten");
@@ -1639,6 +1653,42 @@ async function visitorPoem() {
     addEventListener(ev, () => { stop(); arm(); }, { passive: true }));
   arm();
   window.startSaver = start; // para probar: startSaver() en la consola real
+})();
+
+// ---------- Incendio: brasas que suben por toda la página ----------
+(() => {
+  if (!FUEGO || reduceMotion.matches) return;
+  const cv = document.createElement("canvas");
+  cv.className = "embers"; cv.setAttribute("aria-hidden", "true");
+  document.body.appendChild(cv);
+  const g = cv.getContext("2d");
+  let W = 0, H = 0, d = 1, last = performance.now();
+  const parts = [];
+  function size() { d = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight; cv.width = W * d; cv.height = H * d; g.setTransform(d, 0, 0, d, 0, 0); }
+  size(); addEventListener("resize", size);
+  const max = () => Math.round(Math.min(110, 28 + W * H / 22000));
+  function spawn(y) {
+    parts.push({ x: Math.random() * W, y: y === undefined ? H + 10 : y, vx: (Math.random() - .5) * 14, vy: -(22 + Math.random() * 60),
+      s: Math.random() < .75 ? 2 : 3, life: 3 + Math.random() * 5, age: 0, ph: Math.random() * 6.28, wob: 8 + Math.random() * 22 });
+  }
+  for (let i = 0; i < max(); i++) spawn(Math.random() * H);
+  function frame(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    g.clearRect(0, 0, W, H);
+    if (!document.hidden) while (parts.length < max()) spawn();
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i]; p.age += dt;
+      if (p.age > p.life || p.y < -20) { parts.splice(i, 1); continue; }
+      p.x += (p.vx + Math.sin(p.ph + p.age * 2.2) * p.wob) * dt; p.y += p.vy * dt; p.vy *= .999;
+      const k = p.age / p.life;                                  // amarillo → naranja → rojo → ceniza
+      const c = k < .25 ? "255,226,150" : k < .5 ? "255,160,60" : k < .8 ? "230,80,25" : "120,110,105";
+      const flick = .55 + .45 * Math.sin(p.ph * 3 + p.age * 18);
+      g.fillStyle = `rgba(${c},${((1 - k) * .9 * flick).toFixed(3)})`;
+      g.fillRect(Math.round(p.x / p.s) * p.s, Math.round(p.y / p.s) * p.s, p.s, p.s);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 })();
 
 route();
