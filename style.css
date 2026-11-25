@@ -272,3 +272,32 @@ body{background:#000;color:var(--fg);font-family:Georgia,"Times New Roman",serif
 }
 .fuego .title.glitching{animation:rgbsplit .16s steps(2) infinite}
 .fuego .link.leaving{animation:vanish .7s ease forwards}
+
+/* ---- Incendio, segunda parte ---- */
+/* la obra más reciente arde con una llama más alta */
+.fuego .featured .link{animation:flameBig 1.3s ease-in-out infinite alternate}
+@keyframes flameBig{
+  0%{text-shadow:0 0 4px #fff7e0,0 -3px 10px #ffd27a,0 -9px 20px #ff9a2e,0 -18px 34px #ff5a1a,0 -30px 54px rgba(200,30,0,.55)}
+  50%{text-shadow:0 0 5px #fff7e0,1px -5px 12px #ffe08a,-2px -12px 24px #ffab3a,2px -22px 40px #ff6a1f,-3px -36px 62px rgba(210,40,0,.5)}
+  100%{text-shadow:0 0 4px #fff7e0,-1px -4px 11px #ffcc70,1px -10px 22px #ff8f26,-1px -20px 36px #ff4d14,1px -32px 58px rgba(190,25,0,.6)}
+}
+/* títulos que ya se volvieron ceniza (siguen funcionando) */
+.fuego .link.ashed{color:#8d847d;animation:none;text-shadow:0 0 4px rgba(255,120,40,.18),0 -3px 10px rgba(110,100,95,.35);filter:blur(.3px)}
+.fuego .link.ashed:hover,.fuego .link.ashed:focus-visible{color:#fff4e0;filter:none;animation:flame .6s ease-in-out infinite alternate}
+/* bordes carbonizados que avanzan con el tiempo (--burn: 0 → 1) */
+.fuego .col--right::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  box-shadow:inset 0 0 calc(30px + var(--burn,0) * 260px) calc(var(--burn,0) * 90px) rgba(12,5,2,.96),
+             inset 0 0 calc(12px + var(--burn,0) * 120px) calc(var(--burn,0) * 30px) rgba(255,90,20,.35)}
+/* el aire caliente ondula la ilustración */
+.fuego .art{filter:url(#heat) sepia(.55) saturate(1.7) hue-rotate(-12deg) contrast(1.08) brightness(.88)}
+/* marca chamuscada al pasar */
+.fuego .list li{position:relative}
+.fuego .list li .link{position:relative;z-index:1}
+.scorch{position:absolute;z-index:0;pointer-events:none;border-radius:50%;
+  background:radial-gradient(ellipse at 50% 55%,rgba(25,10,4,.9) 0 40%,rgba(120,40,10,.55) 58%,rgba(255,110,30,.25) 70%,transparent 76%);filter:blur(2px)}
+.fuego .fire-snd span{color:#ff9a3c}
+/* comando «apagar»: el fuego se va y queda humo */
+.apagado .link,.apagado .title,.apagado .featured .link{animation:none!important;color:#cfc8c2;text-shadow:0 -4px 12px rgba(150,140,135,.35)}
+.apagado body::after,.apagado .col--right::after{opacity:0!important;animation:none!important;transition:opacity 1.5s}
+.apagado .art{filter:grayscale(.85) brightness(.7)}
+@media (prefers-reduced-motion:reduce){ .fuego .featured .link{animation:none} .fuego .art{filter:sepia(.55) saturate(1.7) hue-rotate(-12deg) contrast(1.08) brightness(.88)} }

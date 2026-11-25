@@ -1199,6 +1199,7 @@ async function visitorPoem() {
       "  historial       las obras que ya abriste",
       "  cat <archivo>   lee un archivo",
       "  ascii           tu ilustración hecha de letras",
+      "  apagar          apaga el fuego… un rato",
       "  fecha · gato · matrix · limpiar · salir",
       { t: "  (hay más comandos. no todos están en esta lista.)", cls: "dim" }
     ]),
@@ -1273,6 +1274,12 @@ async function visitorPoem() {
       startFx();
     },
     limpiar: async () => { out.replaceChildren(); },
+    apagar: async () => {
+      if (!FUEGO) return print(["no hay nada que apagar. todavía."]);
+      window.fireOut(9);
+      await print([{ t: "apagando...", cls: "dim" }, { t: "solo queda humo.", cls: "ash-s" }]);
+      setTimeout(() => print([{ t: "el fuego vuelve. las metáforas nunca se apagan del todo.", cls: "ash-s" }]), 9200);
+    },
     ascii: async () => {
       if (!window.toggleAscii) return print([{ t: "ascii: no disponible aquí", cls: "err" }]);
       const on = window.toggleAscii();
@@ -1655,7 +1662,15 @@ async function visitorPoem() {
   window.startSaver = start; // para probar: startSaver() en la consola real
 })();
 
-// ---------- Incendio: brasas que suben por toda la página ----------
+// ---------- Incendio: brasas, humo y ceniza que cae y se acumula ----------
+// window.fireOut(seg) apaga el fuego un rato (comando «apagar» de la consola).
+let fireOutUntil = 0;
+window.fireOut = sec => {
+  fireOutUntil = performance.now() + sec * 1000;
+  document.documentElement.classList.add("apagado");
+  setTimeout(() => { if (performance.now() >= fireOutUntil - 50) document.documentElement.classList.remove("apagado"); }, sec * 1000);
+};
+const isOut = () => performance.now() < fireOutUntil;
 (() => {
   if (!FUEGO || reduceMotion.matches) return;
   const cv = document.createElement("canvas");
@@ -1663,32 +1678,173 @@ async function visitorPoem() {
   document.body.appendChild(cv);
   const g = cv.getContext("2d");
   let W = 0, H = 0, d = 1, last = performance.now();
-  const parts = [];
-  function size() { d = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight; cv.width = W * d; cv.height = H * d; g.setTransform(d, 0, 0, d, 0, 0); }
+  const parts = [], smoke = [], flakes = [];
+  let pile = [];                                   // montón de ceniza: una altura por columna de 4 px
+  function size() {
+    d = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight;
+    cv.width = W * d; cv.height = H * d; g.setTransform(d, 0, 0, d, 0, 0);
+    const n = Math.ceil(W / 4) + 1; pile = Array.from({ length: n }, (_, i) => pile[i] || 0);
+  }
   size(); addEventListener("resize", size);
   const max = () => Math.round(Math.min(110, 28 + W * H / 22000));
   function spawn(y) {
     parts.push({ x: Math.random() * W, y: y === undefined ? H + 10 : y, vx: (Math.random() - .5) * 14, vy: -(22 + Math.random() * 60),
       s: Math.random() < .75 ? 2 : 3, life: 3 + Math.random() * 5, age: 0, ph: Math.random() * 6.28, wob: 8 + Math.random() * 22 });
   }
+  const puff = (y) => smoke.push({ x: Math.random() * W, y: y === undefined ? H + 60 : y, r: 50 + Math.random() * 90, vy: -(8 + Math.random() * 14),
+    vx: (Math.random() - .5) * 6, age: 0, life: 12 + Math.random() * 10, ph: Math.random() * 6.28 });
   for (let i = 0; i < max(); i++) spawn(Math.random() * H);
+  for (let i = 0; i < 9; i++) puff(Math.random() * H);
+  let flakeT = 0;
   function frame(now) {
     const dt = Math.min(.05, (now - last) / 1000); last = now;
+    const out = isOut();
     g.clearRect(0, 0, W, H);
-    if (!document.hidden) while (parts.length < max()) spawn();
+    // humo: volutas grises muy tenues (más espeso cuando se apaga el fuego)
+    while (smoke.length < (out ? 16 : 9)) puff();
+    for (let i = smoke.length - 1; i >= 0; i--) {
+      const p = smoke[i]; p.age += dt;
+      if (p.age > p.life) { smoke.splice(i, 1); continue; }
+      p.y += p.vy * dt; p.x += (p.vx + Math.sin(p.ph + p.age * .4) * 6) * dt; p.r += 4 * dt;
+      const k = p.age / p.life, a = Math.sin(Math.PI * k) * (out ? .11 : .055);
+      const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+      gr.addColorStop(0, `rgba(150,140,135,${a.toFixed(3)})`); gr.addColorStop(1, "rgba(150,140,135,0)");
+      g.fillStyle = gr; g.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+    }
+    // brasas (no nacen nuevas mientras está apagado)
+    if (!document.hidden && !out) while (parts.length < max()) spawn();
     for (let i = parts.length - 1; i >= 0; i--) {
       const p = parts[i]; p.age += dt;
       if (p.age > p.life || p.y < -20) { parts.splice(i, 1); continue; }
       p.x += (p.vx + Math.sin(p.ph + p.age * 2.2) * p.wob) * dt; p.y += p.vy * dt; p.vy *= .999;
-      const k = p.age / p.life;                                  // amarillo → naranja → rojo → ceniza
+      const k = p.age / p.life;
       const c = k < .25 ? "255,226,150" : k < .5 ? "255,160,60" : k < .8 ? "230,80,25" : "120,110,105";
       const flick = .55 + .45 * Math.sin(p.ph * 3 + p.age * 18);
       g.fillStyle = `rgba(${c},${((1 - k) * .9 * flick).toFixed(3)})`;
       g.fillRect(Math.round(p.x / p.s) * p.s, Math.round(p.y / p.s) * p.s, p.s, p.s);
     }
+    // ceniza que cae desde arriba y se acumula al pie de la página
+    flakeT -= dt;
+    if (flakeT <= 0 && !document.hidden) { flakeT = .25 + Math.random() * .6; flakes.push({ x: Math.random() * W, y: -6, vy: 14 + Math.random() * 18, ph: Math.random() * 6.28, s: Math.random() < .6 ? 2 : 3 }); }
+    g.fillStyle = "rgba(170,160,152,.75)";
+    for (let i = flakes.length - 1; i >= 0; i--) {
+      const f = flakes[i]; f.y += f.vy * dt; f.x += Math.sin(f.ph + f.y * .03) * 18 * dt;
+      const col = Math.max(0, Math.min(pile.length - 1, Math.round(f.x / 4)));
+      if (f.y >= H - pile[col]) { // se posa
+        if (pile[col] < 13) { pile[col] += 1.2; if (col > 0) pile[col - 1] += .5; if (col < pile.length - 1) pile[col + 1] += .5; }
+        flakes.splice(i, 1); continue;
+      }
+      g.fillRect(Math.round(f.x / f.s) * f.s, Math.round(f.y / f.s) * f.s, f.s, f.s);
+    }
+    g.fillStyle = "rgba(120,112,106,.85)";
+    for (let c = 0; c < pile.length; c++) if (pile[c] > .5) g.fillRect(c * 4, H - Math.round(pile[c] / 2) * 2, 4, Math.round(pile[c] / 2) * 2);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+})();
+
+// ---------- La página se quema con el tiempo ----------
+// Cada minuto avanza el fuego: la ilustración se carboniza por los bordes y algunos títulos
+// quedan en ceniza (siguen funcionando). Al recargar, todo vuelve a arder desde el principio.
+(() => {
+  if (!FUEGO) return;
+  const root = document.documentElement, t0 = performance.now(), FULL = 8 * 60 * 1000;
+  function burn() {
+    const k = Math.min(1, (performance.now() - t0) / FULL);
+    root.style.setProperty("--burn", k.toFixed(3));
+    const links = [...document.querySelectorAll("#projectList .link")];
+    const want = Math.floor(links.length * .45 * k);
+    let have = links.filter(a => a.classList.contains("ashed")).length;
+    while (have < want) {
+      const free = links.filter(a => !a.classList.contains("ashed"));
+      if (!free.length) break;
+      free[(Math.random() * free.length) | 0].classList.add("ashed"); have++;
+    }
+  }
+  setInterval(burn, 15000);
+  window.addEventListener("hashchange", () => setTimeout(burn, 600));
+})();
+
+// ---------- Quemar al pasar: marca chamuscada que se enfría ----------
+(() => {
+  if (!FUEGO || reduceMotion.matches) return;
+  document.addEventListener("pointerover", e => {
+    const a = e.target.closest && e.target.closest("#projectList a.link");
+    if (!a || a.contains(e.relatedTarget)) return;
+    const li = a.parentElement, ra = a.getBoundingClientRect(), rl = li.getBoundingClientRect();
+    const m = document.createElement("span");
+    m.className = "scorch"; m.setAttribute("aria-hidden", "true");
+    m.style.left = (ra.left - rl.left - 6) + "px"; m.style.top = (ra.top - rl.top + ra.height * .45) + "px";
+    m.style.width = (ra.width + 12) + "px"; m.style.height = (ra.height * .75) + "px";
+    li.appendChild(m);
+    const an = m.animate([{ opacity: .95 }, { opacity: .7, offset: .15 }, { opacity: 0 }], { duration: 7000, easing: "ease-out" });
+    an.onfinish = () => m.remove();
+  });
+})();
+
+// ---------- Sonido del fuego (crepitar generado por la página) ----------
+(() => {
+  if (!FUEGO) return;
+  let ac = null, master = null, on = false, timer = 0;
+  function init() {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    master = ac.createGain(); master.gain.value = 0;
+    const comp = ac.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3;
+    master.connect(comp); comp.connect(ac.destination);
+    const buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    // rumor grave del fuego
+    const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+    const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 380;
+    const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 90;
+    const rg = ac.createGain(); rg.gain.value = .5;
+    const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = .27; lg.gain.value = .22; lfo.connect(lg).connect(rg.gain); lfo.start();
+    src.connect(hp).connect(lp).connect(rg).connect(master); src.start();
+    ac.__buf = buf;
+  }
+  function crack() {
+    if (!on || !ac) return;
+    const t = ac.currentTime, n = 1 + (Math.random() * 3 | 0);
+    for (let i = 0; i < n; i++) {
+      const w = t + i * (.01 + Math.random() * .05);
+      const s = ac.createBufferSource(); s.buffer = ac.__buf;
+      const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1200 + Math.random() * 3800; f.Q.value = 2 + Math.random() * 4;
+      const gn = ac.createGain(); const v = (isOut() ? .05 : .22) * (.3 + Math.random() * .7);
+      gn.gain.setValueAtTime(0, w); gn.gain.linearRampToValueAtTime(v, w + .002); gn.gain.exponentialRampToValueAtTime(.0001, w + .02 + Math.random() * .05);
+      s.connect(f).connect(gn).connect(master); s.start(w, Math.random() * 1.8, .1);
+    }
+    timer = setTimeout(crack, 40 + Math.random() * (isOut() ? 900 : 260));
+  }
+  const btn = document.createElement("button");
+  btn.type = "button"; btn.className = "drift-btn fire-snd";
+  const paint = () => { btn.innerHTML = on ? '<span aria-hidden="true">🔥</span> silenciar fuego' : '<span aria-hidden="true">🔥</span> sonido del fuego'; btn.setAttribute("aria-pressed", on); };
+  btn.addEventListener("click", () => {
+    if (!ac) init();
+    on = !on;
+    if (on) { ac.resume(); master.gain.setTargetAtTime(.7, ac.currentTime, .6); crack(); }
+    else { master.gain.setTargetAtTime(0, ac.currentTime, .3); clearTimeout(timer); }
+    paint();
+  });
+  paint();
+  const dock = document.querySelector(".dock");
+  if (dock) dock.insertBefore(btn, dock.querySelector(".priv-link")); else document.body.appendChild(btn);
+})();
+
+// ---------- Pestaña en llamas ----------
+(() => {
+  if (!FUEGO) return;
+  const ic = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
+  const FLAME = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect width="16" height="16" fill="#000"/>'
+    + '<g fill="#ff4d14"><rect x="7" y="1" width="2" height="2"/><rect x="6" y="3" width="4" height="2"/><rect x="5" y="5" width="6" height="3"/><rect x="4" y="8" width="8" height="5"/><rect x="5" y="13" width="6" height="2"/><rect x="10" y="4" width="1" height="2"/><rect x="4" y="6" width="1" height="2"/></g>'
+    + '<g fill="#ffa232"><rect x="7" y="5" width="2" height="2"/><rect x="6" y="7" width="4" height="4"/><rect x="6" y="11" width="4" height="3"/></g>'
+    + '<g fill="#fff1b8"><rect x="7" y="9" width="2" height="4"/></g></svg>';
+  if (ic) ic.href = "data:image/svg+xml," + encodeURIComponent(FLAME);
+  const BASE = "Metafobia", HOT = "🔥 ardiendo…";
+  setInterval(() => {
+    if (document.hidden) return;
+    if (document.title === BASE) document.title = HOT;
+    else if (document.title === HOT) document.title = BASE;
+  }, 3000);
 })();
 
 route();
