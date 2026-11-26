@@ -1,16 +1,5 @@
-// ---------- Estética del momento ----------
-// La página arde durante una semana y después vuelve sola a la Metafobia de siempre
-// (gatos, polvo blanco, poema en la consola). El fuego y el honeypot terminan al empezar el
-// 1 de diciembre de 2026 (medianoche), en la hora de cada visitante. Para cambiarlo, cambia la fecha.
-const FUEGO_HASTA = new Date(2026, 11, 1, 0, 0, 0);   // meses desde 0: 11 = diciembre
-const FUEGO = Date.now() < FUEGO_HASTA.getTime();
-// La misma semana, toda obra pasa primero por la poción (/honeypot/): hay que beberla para entrar.
-const HONEY = FUEGO;
-// La obra de «lo más reciente» (Jardín digital — 404) se abre directo: es la única que no pasa por la poción.
-const HONEY_FREE = "https://metafobian-code.github.io/serpientes/";
-const viaHoney = url => HONEY && url !== HONEY_FREE ? "/honeypot/?a=" + encodeURIComponent(url) : url;
-if (FUEGO) document.documentElement.classList.add("fuego");
-const FIRE_COLORS = ["255,236,170", "255,196,90", "255,150,50", "255,110,30", "235,70,20", "120,110,105"];
+
+
 
 // Secciones de la página principal. Cada una muestra su propia lista de obras.
 // Para añadir una obra: copia una línea { name: "...", url: "..." } dentro de su sección.
@@ -92,7 +81,7 @@ const sections = [
 // "Lo más reciente": la obra destacada arriba de la página principal.
 // Escribe aquí su enlace. Si lo cambias por null, la página elige sola
 // la obra cuyo repositorio se CREÓ más recientemente (editar una obra vieja no la mueve).
-const LATEST = HONEY ? HONEY_FREE : null;   // la semana del fuego queda fija «Jardín digital — 404»; después, automático
+const LATEST = null;
 const LATEST_FALLBACK = LATEST || "https://metafobian-code.github.io/-ansibles/ansible-animacion-v5.html";
 const GITHUB_USER = "metafobian-code";
 // Repositorios que nunca deben salir como "lo más reciente" (en minúsculas).
@@ -292,7 +281,7 @@ function handleClick(e) {
   } else {
     const url = a.href;
     remember(a.getAttribute("href"));
-    setTimeout(() => { window.location.href = viaHoney(url); }, wait);
+    setTimeout(() => { window.location.href = url; }, wait);
   }
 }
 list.addEventListener("click", handleClick);
@@ -355,7 +344,7 @@ function openTitle() {
   scramble(titleEl, 600);
   if (!reduceMotion.matches && typeof dissolve === "function") setTimeout(() => { dissolve(titleEl); titleEl.style.opacity = "0"; }, 380);
   remember(TITLE_URL);
-  setTimeout(() => { window.location.href = viaHoney(TITLE_URL); }, reduceMotion.matches ? 0 : 1050);
+  setTimeout(() => { window.location.href = TITLE_URL; }, reduceMotion.matches ? 0 : 1050);
 }
 titleEl.addEventListener("click", openTitle);
 titleEl.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTitle(); } });
@@ -463,7 +452,7 @@ function fxFrame(now) {
       x = p.x + Math.sin(p.age * 18 + p.y) * 1.5; y = p.y;
       k = 1 - p.age / p.life;
     }
-    fctx.fillStyle = `rgba(${p.c || (FUEGO ? "255,150,55" : "255,255,255")},${(k * (p.a || 0.95)).toFixed(3)})`;
+    fctx.fillStyle = `rgba(${p.c || "255,255,255"},${(k * (p.a || 0.95)).toFixed(3)})`;
     fctx.fillRect(Math.round(x / p.s) * p.s, Math.round(y / p.s) * p.s, p.s, p.s);
   }
   if (fxParts.length) requestAnimationFrame(fxFrame);
@@ -677,7 +666,6 @@ const parts = [];
 // pez mirando a la izquierda (la cabeza se come primero)
 const FISH = [".###...#", "#####.##", "#.######", "#####.##", ".###...#"];
 const COLORS = ["255,255,255", "255,255,255", "255,255,255", "190,235,255", "255,200,230"];
-if (FUEGO) COLORS.splice(0, COLORS.length, ...FIRE_COLORS); // polvo y lluvias de píxeles en color brasa
 function emit(x, y, n, spread, life, up) {
   for (let i = 0; i < n && parts.length < 900; i++) {
     parts.push({
@@ -942,7 +930,6 @@ function catGoTo(a) {
 
 function resetCat() {
   ready = false;
-  if (FUEGO) return; // los gatos huyeron del fuego
   measure();
   if (!lines.length) return;
   idx = 0; dv = 1; phase = "walk"; pt = 0; gait = 0; last = null;
@@ -1207,7 +1194,6 @@ async function visitorPoem() {
       "  historial       las obras que ya abriste",
       "  cat <archivo>   lee un archivo",
       "  ascii           tu ilustración hecha de letras",
-      "  apagar          apaga el fuego… un rato",
       "  fecha · gato · matrix · limpiar · salir",
       { t: "  (hay más comandos. no todos están en esta lista.)", cls: "dim" }
     ]),
@@ -1230,7 +1216,7 @@ async function visitorPoem() {
       if (!w) return print([{ t: `abrir: no encontré «${arg}». prueba «ls 1».`, cls: "err" }]);
       await print([`abriendo «${w.name}»...`, { t: "  ████████████████ 100%", cls: "hit" }]);
       remember(w.url);
-      setTimeout(() => { window.location.href = viaHoney(w.url); }, 500);
+      setTimeout(() => { window.location.href = w.url; }, 500);
     },
     azar: async () => COMMANDS.abrir(allWorks()[(Math.random() * allWorks().length) | 0].name),
     whoami: async () => {
@@ -1272,9 +1258,7 @@ async function visitorPoem() {
       } catch (e) { return print([{ t: `cat: ${arg.slice(0, 60)}: no existe el archivo (o la metáfora)`, cls: "err" }]); }
     },
     fecha: async () => print([new Date().toLocaleString("es", { dateStyle: "full", timeStyle: "short" })]),
-    gato: async () => {
-      if (FUEGO) { await print([{ t: "los gatos huyeron del fuego. solo dejaron huellas de ceniza.", cls: "ash-s" }]); setTimeout(() => window.summonKitten && window.summonKitten(), 400); return; }
-      close(); setTimeout(() => window.summonKitten && window.summonKitten(), 250); },
+    gato: async () => { close(); setTimeout(() => window.summonKitten && window.summonKitten(), 250); },
     matrix: async () => {
       await print([{ t: "despertando...", cls: "hit" }]);
       for (let i = 0; i < 420; i++) fxParts.push({ x: Math.random() * innerWidth, y: -Math.random() * innerHeight, vx: 0, vy: 120 + Math.random() * 160, g: 0,
@@ -1282,12 +1266,6 @@ async function visitorPoem() {
       startFx();
     },
     limpiar: async () => { out.replaceChildren(); },
-    apagar: async () => {
-      if (!FUEGO) return print(["no hay nada que apagar. todavía."]);
-      window.fireOut(9);
-      await print([{ t: "apagando...", cls: "dim" }, { t: "solo queda humo.", cls: "ash-s" }]);
-      setTimeout(() => print([{ t: "el fuego vuelve. las metáforas nunca se apagan del todo.", cls: "ash-s" }]), 9200);
-    },
     ascii: async () => {
       if (!window.toggleAscii) return print([{ t: "ascii: no disponible aquí", cls: "err" }]);
       const on = window.toggleAscii();
@@ -1368,14 +1346,8 @@ async function visitorPoem() {
   async function boot() {
     out.replaceChildren();
     busy = true; input.disabled = true;
-    if (FUEGO) {
-      await print([{ t: "> metafobia.leer('poema_oculto.txt')", cls: "cmd" }, { t: "  buscando metáforas... ardieron", cls: "dim" }, { t: "" }]);
-      await print([{ t: "Solo quedan cenizas.", cls: "ash" }], 70);
-      await print([{ t: "" }, { t: "/* el poema sigue aquí, entre el humo: escribe «poema» */", cls: "dim" }]);
-    } else {
-      await print([{ t: "> metafobia.leer('poema_oculto.txt')", cls: "cmd" }, { t: "  cargando metáforas... ok", cls: "dim" }, { t: "" }]);
-      await print(POEM.map(t => ({ t, cls: "poem" })), 16);
-    }
+    await print([{ t: "> metafobia.leer('poema_oculto.txt')", cls: "cmd" }, { t: "  cargando metáforas... ok", cls: "dim" }, { t: "" }]);
+    await print(POEM.map(t => ({ t, cls: "poem" })), 16);
     await print([{ t: "" }, { t: "/* si llegaste hasta aquí, ya eres parte de la obra */", cls: "dim" },
       { t: "/* esta consola acepta comandos. escribe «ayuda». */", cls: "hit" }]);
     busy = false; input.disabled = false;
@@ -1454,7 +1426,7 @@ async function visitorPoem() {
     btn.classList.add("leaving");
     if (!reduceMotion.matches) dissolve(btn);
     remember(w.url);
-    setTimeout(() => { window.location.href = viaHoney(w.url); }, reduceMotion.matches ? 0 : FADE_MS);
+    setTimeout(() => { window.location.href = w.url; }, reduceMotion.matches ? 0 : FADE_MS);
   });
   window.addEventListener("pageshow", () => btn.classList.remove("leaving"));
 })();
@@ -1473,7 +1445,7 @@ async function visitorPoem() {
         s: Math.random() < 0.7 ? 2 : 3, age: -Math.random() * 1.2, life: 2.2 + Math.random() * 1.2, c: COLORS[(Math.random() * COLORS.length) | 0], a: 0.85 });
     }
     startFx();
-    if (reduceMotion.matches || FUEGO) { busy = false; return; }
+    if (reduceMotion.matches) { busy = false; return; }
     const NSs = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(NSs, "svg");
     svg.setAttribute("class", "kitten");
@@ -1679,271 +1651,6 @@ async function visitorPoem() {
     addEventListener(ev, () => { stop(); arm(); }, { passive: true }));
   arm();
   window.startSaver = start; // para probar: startSaver() en la consola real
-})();
-
-// ---------- Incendio: brasas, humo y ceniza que cae y se acumula ----------
-// window.fireOut(seg) apaga el fuego un rato (comando «apagar» de la consola).
-let fireOutUntil = 0;
-window.fireOut = sec => {
-  fireOutUntil = performance.now() + sec * 1000;
-  document.documentElement.classList.add("apagado");
-  setTimeout(() => { if (performance.now() >= fireOutUntil - 50) document.documentElement.classList.remove("apagado"); }, sec * 1000);
-};
-const isOut = () => performance.now() < fireOutUntil;
-(() => {
-  if (!FUEGO || reduceMotion.matches) return;
-  const cv = document.createElement("canvas");
-  cv.className = "embers"; cv.setAttribute("aria-hidden", "true");
-  document.body.appendChild(cv);
-  const g = cv.getContext("2d");
-  let W = 0, H = 0, d = 1, last = performance.now();
-  const parts = [], smoke = [], flakes = [];
-  let pile = [];                                   // montón de ceniza: una altura por columna de 4 px
-  function size() {
-    d = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight;
-    cv.width = W * d; cv.height = H * d; g.setTransform(d, 0, 0, d, 0, 0);
-    const n = Math.ceil(W / 4) + 1; pile = Array.from({ length: n }, (_, i) => pile[i] || 0);
-  }
-  size(); addEventListener("resize", size);
-  const max = () => Math.round(Math.min(110, 28 + W * H / 22000));
-  function spawn(y) {
-    parts.push({ x: Math.random() * W, y: y === undefined ? H + 10 : y, vx: (Math.random() - .5) * 14, vy: -(22 + Math.random() * 60),
-      s: Math.random() < .75 ? 2 : 3, life: 3 + Math.random() * 5, age: 0, ph: Math.random() * 6.28, wob: 8 + Math.random() * 22 });
-  }
-  const puff = (y) => smoke.push({ x: Math.random() * W, y: y === undefined ? H + 60 : y, r: 50 + Math.random() * 90, vy: -(8 + Math.random() * 14),
-    vx: (Math.random() - .5) * 6, age: 0, life: 12 + Math.random() * 10, ph: Math.random() * 6.28 });
-  for (let i = 0; i < max(); i++) spawn(Math.random() * H);
-  for (let i = 0; i < 9; i++) puff(Math.random() * H);
-  let flakeT = 0;
-  function frame(now) {
-    const dt = Math.min(.05, (now - last) / 1000); last = now;
-    const out = isOut();
-    g.clearRect(0, 0, W, H);
-    // humo: volutas grises muy tenues (más espeso cuando se apaga el fuego)
-    while (smoke.length < (out ? 16 : 9)) puff();
-    for (let i = smoke.length - 1; i >= 0; i--) {
-      const p = smoke[i]; p.age += dt;
-      if (p.age > p.life) { smoke.splice(i, 1); continue; }
-      p.y += p.vy * dt; p.x += (p.vx + Math.sin(p.ph + p.age * .4) * 6) * dt; p.r += 4 * dt;
-      const k = p.age / p.life, a = Math.sin(Math.PI * k) * (out ? .11 : .055);
-      const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-      gr.addColorStop(0, `rgba(150,140,135,${a.toFixed(3)})`); gr.addColorStop(1, "rgba(150,140,135,0)");
-      g.fillStyle = gr; g.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
-    }
-    // brasas (no nacen nuevas mientras está apagado)
-    if (!document.hidden && !out) while (parts.length < max()) spawn();
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const p = parts[i]; p.age += dt;
-      if (p.age > p.life || p.y < -20) { parts.splice(i, 1); continue; }
-      p.x += (p.vx + Math.sin(p.ph + p.age * 2.2) * p.wob) * dt; p.y += p.vy * dt; p.vy *= .999;
-      const k = p.age / p.life;
-      const c = k < .25 ? "255,226,150" : k < .5 ? "255,160,60" : k < .8 ? "230,80,25" : "120,110,105";
-      const flick = .55 + .45 * Math.sin(p.ph * 3 + p.age * 18);
-      g.fillStyle = `rgba(${c},${((1 - k) * .9 * flick).toFixed(3)})`;
-      g.fillRect(Math.round(p.x / p.s) * p.s, Math.round(p.y / p.s) * p.s, p.s, p.s);
-    }
-    // ceniza que cae desde arriba y se acumula al pie de la página
-    flakeT -= dt;
-    if (flakeT <= 0 && !document.hidden) { flakeT = .25 + Math.random() * .6; flakes.push({ x: Math.random() * W, y: -6, vy: 14 + Math.random() * 18, ph: Math.random() * 6.28, s: Math.random() < .6 ? 2 : 3 }); }
-    g.fillStyle = "rgba(170,160,152,.75)";
-    for (let i = flakes.length - 1; i >= 0; i--) {
-      const f = flakes[i]; f.y += f.vy * dt; f.x += Math.sin(f.ph + f.y * .03) * 18 * dt;
-      const col = Math.max(0, Math.min(pile.length - 1, Math.round(f.x / 4)));
-      if (f.y >= H - pile[col]) { // se posa
-        if (pile[col] < 13) { pile[col] += 1.2; if (col > 0) pile[col - 1] += .5; if (col < pile.length - 1) pile[col + 1] += .5; }
-        flakes.splice(i, 1); continue;
-      }
-      g.fillRect(Math.round(f.x / f.s) * f.s, Math.round(f.y / f.s) * f.s, f.s, f.s);
-    }
-    g.fillStyle = "rgba(120,112,106,.85)";
-    for (let c = 0; c < pile.length; c++) if (pile[c] > .5) g.fillRect(c * 4, H - Math.round(pile[c] / 2) * 2, 4, Math.round(pile[c] / 2) * 2);
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-})();
-
-// ---------- Llamas de verdad: suben desde la ilustración y sobre algunos títulos ----------
-(() => {
-  if (!FUEGO || reduceMotion.matches) return;
-  const cv = document.createElement("canvas");
-  cv.className = "flames"; cv.setAttribute("aria-hidden", "true");
-  document.body.appendChild(cv);
-  const g = cv.getContext("2d");
-  let W = 0, H = 0, d = 1, last = performance.now(), T = 0;
-  function size() { d = Math.min(2, devicePixelRatio || 1); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight; cv.width = W * d; cv.height = H * d; g.setTransform(d, 0, 0, d, 0, 0); }
-  size(); addEventListener("resize", size);
-  // «sprites» de fuego ya pintados: del centro blanco-amarillo al rojo
-  const sprite = (r, gg, b) => { const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
-    const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, `rgba(${r},${gg},${b},1)`); gr.addColorStop(.4, `rgba(${r},${gg},${b},.55)`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
-    x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c; };
-  const SPR = [sprite(255, 245, 200), sprite(255, 205, 90), sprite(255, 140, 40), sprite(235, 70, 20), sprite(150, 30, 10)];
-  const parts = [];
-  const coarse = matchMedia("(pointer: coarse)").matches;
-  const DENS = coarse ? .6 : 1, PMAX = coarse ? 520 : 900;   // tabletas: menos partículas, mismo efecto
-  const art = document.querySelector(".col--right");
-  let hot = [], pickT = 0;
-  function pickTitles() {                       // la obra destacada siempre arde; además 2 títulos al azar
-    const ls = [...document.querySelectorAll("#projectList .link")].filter(a => !a.classList.contains("ashed"));
-    const feat = document.querySelector(".featured .link");
-    const others = ls.filter(a => a !== feat).sort(() => Math.random() - .5).slice(0, 2);
-    hot = (feat ? [feat] : []).concat(others);
-  }
-  window.addEventListener("hashchange", () => setTimeout(pickTitles, 700));
-  const tongue = (x, t, k) => Math.max(0, .5 + .5 * Math.sin(x * .031 * k + t * 1.7) * Math.cos(x * .013 * k - t * .9 + 1.3));
-  const live = { art: 0, title: 0 };
-  function emitLine(x0, x1, y, rate, power, k, dt, tag) {
-    const cap = tag === "art" ? PMAX * .65 : PMAX * .35;   // cada fuego con su propio presupuesto
-    const n = live[tag] > cap ? 0 : Math.min(220, (x1 - x0) * rate * dt * DENS);
-    for (let i = 0; i < n; i++) {
-      const x = x0 + Math.random() * (x1 - x0), tg = tongue(x, T, k);
-      if (Math.random() > .25 + tg) continue;
-      parts.push({ x, y: y + Math.random() * 4, vx: (Math.random() - .5) * 8, vy: -(power * (.4 + tg * 1.1) * (.75 + Math.random() * .4)),
-        r: (12 + Math.random() * 14) * (.55 + tg * .8) * k, age: 0, life: .45 + Math.random() * .45 + tg * .45, ph: Math.random() * 6.28, w: 6 + Math.random() * 8, tag });
-      live[tag]++;
-    }
-  }
-  function frame(now) {
-    const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
-    g.clearRect(0, 0, W, H);
-    if (!document.hidden && !isOut()) {
-      // 1) la ilustración arde desde abajo (y por su borde izquierdo en pantallas anchas)
-      if (art) {
-        const r = art.getBoundingClientRect();
-        if (r.bottom > 0 && r.top < H) {
-          emitLine(r.left, r.right, Math.min(r.bottom, H) + 6, 2.6, 190, 1.4, dt, "art");
-          if (r.left > 40 && innerWidth > 760) for (let i = 0; i < 6 * dt * 60; i++) {   // lenguas que trepan por el borde
-            const y = r.top + Math.random() * (Math.min(r.bottom, H) - r.top), tg = tongue(y, T * .8, .7);
-            if (Math.random() > .15 + tg * .6) continue;
-            parts.push({ x: r.left + Math.random() * 6, y, vx: 10 + Math.random() * 25, vy: -(50 + tg * 90), r: 5 + Math.random() * 8, age: 0, life: .4 + Math.random() * .5, ph: Math.random() * 6.28 });
-          }
-        }
-      }
-      // 2) llamitas sobre algunos títulos (cambian cada tanto)
-      pickT -= dt; if (pickT <= 0 || !hot.every(a => a.isConnected)) { pickTitles(); pickT = 18 + Math.random() * 10; }
-      hot.forEach((a, i) => {
-        const r = a.getBoundingClientRect(); if (r.bottom < 0 || r.top > H || !r.width) return;
-        const big = a.closest(".featured") ? 1 : .6;
-        emitLine(r.left + 4, r.right - 4, r.top + 4, 7 * big, 70 * big, .5 * big + .22, dt, "title");   // nacen sobre las letras, no encima de ellas
-      });
-    }
-    g.globalCompositeOperation = "lighter";
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const p = parts[i]; p.age += dt;
-      if (p.age >= p.life) { if (p.tag) live[p.tag]--; parts.splice(i, 1); continue; }
-      p.vy -= 70 * dt; p.x += (p.vx + Math.sin(p.ph + p.age * 10) * (p.w || 10)) * dt; p.y += p.vy * dt;
-      const k = p.age / p.life, rad = p.r * (1 - k * .75);
-      const idx = Math.min(SPR.length - 1, Math.floor(k * SPR.length));
-      g.globalAlpha = (k < .12 ? k / .12 : 1) * (1 - k) * .6;
-      g.drawImage(SPR[idx], p.x - rad, p.y - rad, rad * 2, rad * 2);
-    }
-    g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-})();
-
-// ---------- La página se quema con el tiempo ----------
-// Cada minuto avanza el fuego: la ilustración se carboniza por los bordes y algunos títulos
-// quedan en ceniza (siguen funcionando). Al recargar, todo vuelve a arder desde el principio.
-(() => {
-  if (!FUEGO) return;
-  const root = document.documentElement, t0 = performance.now(), FULL = 8 * 60 * 1000;
-  function burn() {
-    const k = Math.min(1, (performance.now() - t0) / FULL);
-    root.style.setProperty("--burn", k.toFixed(3));
-    const links = [...document.querySelectorAll("#projectList .link")];
-    const want = Math.floor(links.length * .45 * k);
-    let have = links.filter(a => a.classList.contains("ashed")).length;
-    while (have < want) {
-      const free = links.filter(a => !a.classList.contains("ashed"));
-      if (!free.length) break;
-      free[(Math.random() * free.length) | 0].classList.add("ashed"); have++;
-    }
-  }
-  setInterval(burn, 15000);
-  window.addEventListener("hashchange", () => setTimeout(burn, 600));
-})();
-
-// ---------- Quemar al pasar: marca chamuscada que se enfría ----------
-(() => {
-  if (!FUEGO || reduceMotion.matches) return;
-  document.addEventListener("pointerover", e => {
-    const a = e.target.closest && e.target.closest("#projectList a.link");
-    if (!a || a.contains(e.relatedTarget)) return;
-    const li = a.parentElement, ra = a.getBoundingClientRect(), rl = li.getBoundingClientRect();
-    const m = document.createElement("span");
-    m.className = "scorch"; m.setAttribute("aria-hidden", "true");
-    m.style.left = (ra.left - rl.left - 6) + "px"; m.style.top = (ra.top - rl.top + ra.height * .45) + "px";
-    m.style.width = (ra.width + 12) + "px"; m.style.height = (ra.height * .75) + "px";
-    li.appendChild(m);
-    const an = m.animate([{ opacity: .95 }, { opacity: .7, offset: .15 }, { opacity: 0 }], { duration: 7000, easing: "ease-out" });
-    an.onfinish = () => m.remove();
-  });
-})();
-
-// ---------- Sonido del fuego (crepitar generado por la página) ----------
-(() => {
-  if (!FUEGO) return;
-  let ac = null, master = null, on = false, timer = 0;
-  function init() {
-    ac = new (window.AudioContext || window.webkitAudioContext)();
-    master = ac.createGain(); master.gain.value = 0;
-    const comp = ac.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 3;
-    master.connect(comp); comp.connect(ac.destination);
-    const buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    // rumor grave del fuego
-    const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
-    const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 380;
-    const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 90;
-    const rg = ac.createGain(); rg.gain.value = .5;
-    const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = .27; lg.gain.value = .22; lfo.connect(lg).connect(rg.gain); lfo.start();
-    src.connect(hp).connect(lp).connect(rg).connect(master); src.start();
-    ac.__buf = buf;
-  }
-  function crack() {
-    if (!on || !ac) return;
-    const t = ac.currentTime, n = 1 + (Math.random() * 3 | 0);
-    for (let i = 0; i < n; i++) {
-      const w = t + i * (.01 + Math.random() * .05);
-      const s = ac.createBufferSource(); s.buffer = ac.__buf;
-      const f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1200 + Math.random() * 3800; f.Q.value = 2 + Math.random() * 4;
-      const gn = ac.createGain(); const v = (isOut() ? .05 : .22) * (.3 + Math.random() * .7);
-      gn.gain.setValueAtTime(0, w); gn.gain.linearRampToValueAtTime(v, w + .002); gn.gain.exponentialRampToValueAtTime(.0001, w + .02 + Math.random() * .05);
-      s.connect(f).connect(gn).connect(master); s.start(w, Math.random() * 1.8, .1);
-    }
-    timer = setTimeout(crack, 40 + Math.random() * (isOut() ? 900 : 260));
-  }
-  const btn = document.createElement("button");
-  btn.type = "button"; btn.className = "drift-btn fire-snd";
-  const paint = () => { btn.innerHTML = on ? '<span aria-hidden="true">🔥</span> silenciar fuego' : '<span aria-hidden="true">🔥</span> sonido del fuego'; btn.setAttribute("aria-pressed", on); };
-  btn.addEventListener("click", () => {
-    if (!ac) init();
-    on = !on;
-    if (on) { ac.resume(); master.gain.setTargetAtTime(.7, ac.currentTime, .6); crack(); }
-    else { master.gain.setTargetAtTime(0, ac.currentTime, .3); clearTimeout(timer); }
-    paint();
-  });
-  paint();
-  const dock = document.querySelector(".dock");
-  if (dock) dock.insertBefore(btn, dock.querySelector(".priv-link")); else document.body.appendChild(btn);
-})();
-
-// ---------- Pestaña en llamas ----------
-(() => {
-  if (!FUEGO) return;
-  const ic = document.querySelector('link[rel="icon"][type="image/svg+xml"]');
-  const FLAME = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect width="16" height="16" fill="#000"/>'
-    + '<g fill="#ff4d14"><rect x="7" y="1" width="2" height="2"/><rect x="6" y="3" width="4" height="2"/><rect x="5" y="5" width="6" height="3"/><rect x="4" y="8" width="8" height="5"/><rect x="5" y="13" width="6" height="2"/><rect x="10" y="4" width="1" height="2"/><rect x="4" y="6" width="1" height="2"/></g>'
-    + '<g fill="#ffa232"><rect x="7" y="5" width="2" height="2"/><rect x="6" y="7" width="4" height="4"/><rect x="6" y="11" width="4" height="3"/></g>'
-    + '<g fill="#fff1b8"><rect x="7" y="9" width="2" height="4"/></g></svg>';
-  if (ic) ic.href = "data:image/svg+xml," + encodeURIComponent(FLAME);
-  const BASE = "Metafobia", HOT = "🔥 ardiendo…";
-  setInterval(() => {
-    if (document.hidden) return;
-    if (document.title === BASE) document.title = HOT;
-    else if (document.title === HOT) document.title = BASE;
-  }, 3000);
 })();
 
 route();
