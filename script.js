@@ -1,8 +1,8 @@
 // ---------- Estética del momento ----------
 // La página arde durante una semana y después vuelve sola a la Metafobia de siempre
-// (gatos, polvo blanco, poema en la consola). El fuego se apaga el 2 de diciembre de 2026
-// a medianoche, en la hora de cada visitante. Para encenderlo o apagarlo a mano, cambia la fecha.
-const FUEGO_HASTA = new Date(2026, 11, 2, 0, 0, 0);   // meses desde 0: 11 = diciembre
+// (gatos, polvo blanco, poema en la consola). El fuego y el honeypot terminan al empezar el
+// 1 de diciembre de 2026 (medianoche), en la hora de cada visitante. Para cambiarlo, cambia la fecha.
+const FUEGO_HASTA = new Date(2026, 11, 1, 0, 0, 0);   // meses desde 0: 11 = diciembre
 const FUEGO = Date.now() < FUEGO_HASTA.getTime();
 // La misma semana, toda obra pasa primero por la poción (/honeypot/): hay que beberla para entrar.
 const HONEY = FUEGO;
