@@ -8,5 +8,9 @@
 #
 # (si eres humano: hay un archivo llamado secreto.txt)
 
+# te dejo también una puerta que no deberías abrir.
+# los robots buenos la respetan. los otros la buscan.
+
 User-agent: *
 Allow: /
+Disallow: /admin/

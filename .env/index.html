@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!-- la puerta que dejé abierta. esta página no registra nada: solo te responde. -->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>.env</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/trampa/trampa.css">
+</head>
+<body>
+<main>
+  <div class="bar"><span>/.env</span><b>trampa · metafobia</b></div>
+  <pre id="out" aria-live="polite"></pre>
+  <a class="back" href="/">← volver a Metafobia</a>
+</main>
+<script type="text/plain" id="lines">
+> cat .env
+# leyendo variables de entorno...
+
+SECRET_KEY=la_metafora_no_se_cifra
+DB_PASSWORD=el_olvido
+API_TOKEN=un_gato_dormido
+
+# todo es falso. lo único verdadero es que viniste a buscarlo.
+lo que escondo no está en un archivo:
+está en lo que no supe decir.
+</script>
+<script src="/trampa/trampa.js"></script>
+</body>
+</html>

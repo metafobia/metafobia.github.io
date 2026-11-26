@@ -1292,10 +1292,13 @@ async function visitorPoem() {
     salir: async () => close(),
     echo: async (arg) => print([arg || ""]),
     sudo: async (arg) => {
+      const sub = (arg || "").trim().split(/\s+/), c0 = norm(sub[0] || "");
+      if (["rm", "hack", "nmap", "ssh"].includes(c0)) return COMMANDS[c0](sub.slice(1).join(" "));
       if (norm(arg) === "amor") return print([`[sudo] contraseña para amor: ********`, { t: "permiso concedido.", cls: "hit" }, { t: "el amor ya estaba instalado. solo faltaba ejecutarlo.", cls: "poem" }], 22);
       return print([{ t: `${arg || "sudo"}: no está en el archivo sudoers. este incidente será reportado al gato.`, cls: "err" }]);
     },
     rm: async (arg) => {
+      if (/-rf\s+\/\s*$|-rf\s+\/\*/.test(arg || "")) return COMMANDS.hack();
       if (!/metafora/.test(norm(arg))) return print([{ t: `rm: no se puede borrar «${arg}»: aquí nada se borra del todo`, cls: "err" }]);
       await print(["borrando metáforas...", "  rm: la-luna-como-espejo ... ok", "  rm: el-gato-como-sueño ... ok", "  rm: la-página-como-cuerpo ..."], 18);
       document.documentElement.classList.add("broken");
@@ -1304,6 +1307,14 @@ async function visitorPoem() {
         await print([{ t: "error crítico: las metáforas no se pueden borrar.", cls: "err" }, { t: "solo cambian de lugar.", cls: "poem" }], 22);
       }, 2200);
     },
+    hack: async () => {
+      await print([{ t: "escaneando puertos...", cls: "dim" }, "  22/ssh      cerrado", "  80/http     abierto", "  404/sueño   abierto", { t: "! intruso detectado", cls: "err" }], 18);
+      const l = await visitorPoem();
+      await print([{ t: "" }, { t: "te vi entrar por la puerta que dejé abierta.", cls: "poem" }, { t: l[0] + ",", cls: "poem" },
+        { t: "no guardé tu nombre. no guardé nada.", cls: "poem" }, { t: "buscabas el control: aquí solo hay metáforas.", cls: "poem" }, { t: "" },
+        { t: "/* hay más puertas abiertas: /admin/  /.env  /backup.zip  /wp-login.php */", cls: "dim" }], 30);
+    },
+    nmap: async () => COMMANDS.hack(), ssh: async () => COMMANDS.hack(), admin: async () => { await print(["abriendo /admin/..."]); setTimeout(() => { location.href = "/admin/"; }, 700); },
     hola: async () => print(["hola. el gato también te saluda."]),
     miau: async () => print(["miau."]),
     pwd: async () => print(["/metafobia/entre/las/palabras"]),

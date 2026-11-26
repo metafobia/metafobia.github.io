@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!-- la puerta que dejé abierta. este formulario no envía ni guarda nada: solo responde. -->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>/admin · Metafobia</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/trampa/trampa.css">
+</head>
+<body>
+<main>
+  <div class="bar"><span>/admin</span><b>panel de control · metafobia</b></div>
+  <p class="poem" style="font:italic 1.3rem/1.5 Georgia,serif;color:#fff1e2">Acceso restringido.</p>
+  <form id="login" autocomplete="off" novalidate>
+    <label for="u">usuario</label>
+    <input id="u" name="u" type="text" autocomplete="off" spellcheck="false" maxlength="60">
+    <label for="m">metáfora</label>
+    <input id="m" name="m" type="text" autocomplete="off" spellcheck="false" maxlength="60">
+    <button type="submit">entrar</button>
+    <p class="aviso">⚠ esto es una obra, no un panel real: no escribas contraseñas de verdad. nada de lo que escribas se guarda ni se envía.</p>
+  </form>
+  <p class="msg" id="msg" aria-live="polite"></p>
+</main>
+<script src="/trampa/trampa.js"></script>
+</body>
+</html>

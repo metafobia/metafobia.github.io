@@ -1,0 +1,31 @@
+/* la puerta que dejé abierta — estilos compartidos de las trampas */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:#050304;color:#d8cfc8}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 16px;font:15px/1.7 "Courier New",Courier,monospace}
+main{width:min(100%,34rem)}
+.bar{display:flex;justify-content:space-between;font-size:.72rem;letter-spacing:.12em;color:#7a6a60;text-transform:uppercase;margin-bottom:1.4rem}
+.bar b{color:#ff8a3c;font-weight:400}
+pre{white-space:pre-wrap;font:inherit;min-height:12rem}
+pre .cmd{color:#ff9a3c}
+pre .dim{color:#6f625a}
+pre .poem{font:italic 1.25rem/1.6 Georgia,serif;color:#fff1e2;text-shadow:0 0 6px rgba(255,140,50,.45),0 -3px 12px rgba(255,80,20,.25)}
+pre .warn{color:#ff6a5a}
+.caret{display:inline-block;width:.6em;height:1.05em;background:#ff9a3c;vertical-align:-.15em;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+a.back{display:inline-block;margin-top:2rem;color:#d8cfc8;text-decoration:none;border:1px solid #3a2a22;border-radius:4px;padding:.6rem .9rem;opacity:0;transition:opacity 1s,border-color .3s,color .3s}
+a.back.on{opacity:1}
+a.back:hover,a.back:focus-visible{border-color:#ff8a3c;color:#fff;outline:none}
+/* panel falso */
+form{margin-top:1.2rem;display:grid;gap:.8rem}
+label{font-size:.75rem;letter-spacing:.1em;color:#8a7a70;text-transform:uppercase}
+input{width:100%;background:#0d0806;border:1px solid #3a2a22;border-radius:4px;color:#fff1e2;padding:.7rem .8rem;font:inherit}
+input:focus{outline:none;border-color:#ff8a3c;box-shadow:0 0 12px rgba(255,120,40,.25)}
+button{background:#1a0f0a;border:1px solid #ff8a3c;color:#ffb070;border-radius:4px;padding:.7rem;font:inherit;letter-spacing:.1em;cursor:pointer}
+button:hover,button:focus-visible{background:#ff8a3c;color:#050304;outline:none}
+.aviso{margin-top:.4rem;font-size:.72rem;color:#7a6a60}
+.msg{min-height:3.4rem;margin-top:1rem;font:italic 1.05rem/1.5 Georgia,serif;color:#ffcf9a}
+.burn{animation:burn 1.6s ease forwards}
+@keyframes burn{0%{filter:none;opacity:1}40%{filter:blur(1px) sepia(1) saturate(4) hue-rotate(-20deg)}100%{filter:blur(8px) grayscale(1);opacity:0}}
+.glitch{animation:gl .18s steps(2) 4}
+@keyframes gl{0%{transform:translate(0)}50%{transform:translate(-4px,1px) skewX(-3deg)}100%{transform:translate(3px,-1px)}}
+@media (prefers-reduced-motion:reduce){.caret,.burn,.glitch{animation:none}}
