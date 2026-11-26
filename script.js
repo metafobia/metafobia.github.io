@@ -6,7 +6,9 @@ const FUEGO_HASTA = new Date(2026, 11, 2, 0, 0, 0);   // meses desde 0: 11 = dic
 const FUEGO = Date.now() < FUEGO_HASTA.getTime();
 // La misma semana, toda obra pasa primero por la poción (/honeypot/): hay que beberla para entrar.
 const HONEY = FUEGO;
-const viaHoney = url => HONEY ? "/honeypot/?a=" + encodeURIComponent(url) : url;
+// La obra de «lo más reciente» (Jardín digital — 404) se abre directo: es la única que no pasa por la poción.
+const HONEY_FREE = "https://metafobian-code.github.io/serpientes/";
+const viaHoney = url => HONEY && url !== HONEY_FREE ? "/honeypot/?a=" + encodeURIComponent(url) : url;
 if (FUEGO) document.documentElement.classList.add("fuego");
 const FIRE_COLORS = ["255,236,170", "255,196,90", "255,150,50", "255,110,30", "235,70,20", "120,110,105"];
 
@@ -90,7 +92,7 @@ const sections = [
 // "Lo más reciente": la obra destacada arriba de la página principal.
 // Escribe aquí su enlace. Si lo cambias por null, la página elige sola
 // la obra cuyo repositorio se CREÓ más recientemente (editar una obra vieja no la mueve).
-const LATEST = null;
+const LATEST = HONEY ? HONEY_FREE : null;   // la semana del fuego queda fija «Jardín digital — 404»; después, automático
 const LATEST_FALLBACK = LATEST || "https://metafobian-code.github.io/-ansibles/ansible-animacion-v5.html";
 const GITHUB_USER = "metafobian-code";
 // Repositorios que nunca deben salir como "lo más reciente" (en minúsculas).
