@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!-- honeypot: para poder entrar al verdadero lugar, primero hay que beber de la poción. -->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>Honeypot · Metafobia</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;overflow:hidden;color:#e8e2ff}
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  .frame{position:relative;width:min(100vw,calc(100vh * 1920 / 1072));aspect-ratio:1920/1072}
+  .frame img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+  /* la poción: zona que se puede tocar */
+  .potion{position:absolute;left:41.5%;top:41%;width:17.5%;height:46%;border:0;border-radius:45% 45% 48% 48%;
+    background:radial-gradient(ellipse at 50% 62%,rgba(255,80,220,.0),rgba(255,80,220,0) 60%);cursor:pointer;
+    animation:pulse 2.6s ease-in-out infinite}
+  .potion:focus-visible{outline:2px dashed rgba(255,140,240,.8);outline-offset:6px}
+  @keyframes pulse{50%{box-shadow:0 0 60px 10px rgba(255,80,230,.35),inset 0 0 40px rgba(255,120,240,.25)}}
+  .hint{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+    background:rgba(20,6,30,.72);color:#ffd8fb;border:1px solid rgba(255,120,240,.6);border-radius:999px;
+    padding:12px 20px;font:15px/1 "Courier New",Courier,monospace;letter-spacing:.08em;cursor:pointer;white-space:nowrap;
+    box-shadow:0 0 18px rgba(255,80,230,.35)}
+  .hint:hover,.hint:focus-visible{background:#ff5ae6;color:#14061e;outline:none}
+  /* al beber: el mundo se distorsiona y se funde */
+  body.drink .frame{animation:drink 1.6s ease-in forwards}
+  body.drink .hint{opacity:0;transition:opacity .3s}
+  @keyframes drink{
+    0%{filter:none;transform:scale(1)}
+    30%{filter:hue-rotate(60deg) saturate(2) blur(1px);transform:scale(1.04) skewX(-2deg)}
+    60%{filter:hue-rotate(160deg) saturate(3) blur(4px);transform:scale(1.18) skewX(3deg)}
+    100%{filter:hue-rotate(300deg) saturate(4) blur(18px) brightness(2.2);transform:scale(1.6);opacity:0}
+  }
+  .msg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;
+    font:italic clamp(1.2rem,3vw,2rem)/1.4 Georgia,serif;color:#fff;text-shadow:-2px 0 rgba(255,60,200,.8),2px 0 rgba(80,220,255,.8);transition:opacity .6s}
+  body.drink .msg{opacity:1;transition-delay:.7s}
+  @media (prefers-reduced-motion:reduce){.potion{animation:none}body.drink .frame{animation:none;opacity:0}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="frame">
+    <img src="honeypot.jpg" alt="HONEYPOT. Una poción violeta frente a un arcoíris bajo una lluvia de código. Para poder entrar al verdadero lugar, primero hay que beber de la poción.">
+    <button class="potion" id="potion" type="button" aria-label="Beber la poción y entrar"></button>
+  </div>
+</div>
+<button class="hint" id="hint" type="button">⚗ beber la poción</button>
+<p class="msg" aria-live="polite" id="msg"></p>
+<script src="honeypot.js"></script>
+</body>
+</html>

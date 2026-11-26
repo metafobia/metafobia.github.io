@@ -4,6 +4,9 @@
 // a medianoche, en la hora de cada visitante. Para encenderlo o apagarlo a mano, cambia la fecha.
 const FUEGO_HASTA = new Date(2026, 11, 2, 0, 0, 0);   // meses desde 0: 11 = diciembre
 const FUEGO = Date.now() < FUEGO_HASTA.getTime();
+// La misma semana, toda obra pasa primero por la poción (/honeypot/): hay que beberla para entrar.
+const HONEY = FUEGO;
+const viaHoney = url => HONEY ? "/honeypot/?a=" + encodeURIComponent(url) : url;
 if (FUEGO) document.documentElement.classList.add("fuego");
 const FIRE_COLORS = ["255,236,170", "255,196,90", "255,150,50", "255,110,30", "235,70,20", "120,110,105"];
 
@@ -287,7 +290,7 @@ function handleClick(e) {
   } else {
     const url = a.href;
     remember(a.getAttribute("href"));
-    setTimeout(() => { window.location.href = url; }, wait);
+    setTimeout(() => { window.location.href = viaHoney(url); }, wait);
   }
 }
 list.addEventListener("click", handleClick);
@@ -350,7 +353,7 @@ function openTitle() {
   scramble(titleEl, 600);
   if (!reduceMotion.matches && typeof dissolve === "function") setTimeout(() => { dissolve(titleEl); titleEl.style.opacity = "0"; }, 380);
   remember(TITLE_URL);
-  setTimeout(() => { window.location.href = TITLE_URL; }, reduceMotion.matches ? 0 : 1050);
+  setTimeout(() => { window.location.href = viaHoney(TITLE_URL); }, reduceMotion.matches ? 0 : 1050);
 }
 titleEl.addEventListener("click", openTitle);
 titleEl.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openTitle(); } });
@@ -1225,7 +1228,7 @@ async function visitorPoem() {
       if (!w) return print([{ t: `abrir: no encontré «${arg}». prueba «ls 1».`, cls: "err" }]);
       await print([`abriendo «${w.name}»...`, { t: "  ████████████████ 100%", cls: "hit" }]);
       remember(w.url);
-      setTimeout(() => { window.location.href = w.url; }, 500);
+      setTimeout(() => { window.location.href = viaHoney(w.url); }, 500);
     },
     azar: async () => COMMANDS.abrir(allWorks()[(Math.random() * allWorks().length) | 0].name),
     whoami: async () => {
@@ -1449,7 +1452,7 @@ async function visitorPoem() {
     btn.classList.add("leaving");
     if (!reduceMotion.matches) dissolve(btn);
     remember(w.url);
-    setTimeout(() => { window.location.href = w.url; }, reduceMotion.matches ? 0 : FADE_MS);
+    setTimeout(() => { window.location.href = viaHoney(w.url); }, reduceMotion.matches ? 0 : FADE_MS);
   });
   window.addEventListener("pageshow", () => btn.classList.remove("leaving"));
 })();
