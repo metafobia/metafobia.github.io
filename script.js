@@ -73,7 +73,8 @@ const sections = [
       { name: "Silencio", url: "https://metafobian-code.github.io/dead/" },
       { name: "Flame", url: "https://metafobian-code.github.io/Times/" },
       { name: "Relatividad de la vela", url: "https://metafobian-code.github.io/bucle/" },
-      { name: "Jardín digital — 404", url: "https://metafobian-code.github.io/serpientes/" }
+      { name: "Jardín digital — 404", url: "https://metafobian-code.github.io/serpientes/" },
+      { name: "Diablo futurista", url: "https://metafobian-code.github.io/paraisoperdido/" }
     ]
   }
 ];
